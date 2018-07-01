@@ -26,6 +26,7 @@ class Server:
         app.config.update(config.__dict__ or {})
         app.errorhandler(404)(ErrorHandlers.not_found)
         app.errorhandler(400)(ErrorHandlers.bad_request)
+        app.errorhandler(405)(ErrorHandlers.method_not_allowed)
         Urls.generate(app)
         CORS(app)
         return app
