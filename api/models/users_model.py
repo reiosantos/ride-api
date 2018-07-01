@@ -29,6 +29,9 @@ class Users:
             self.password = password
             self.user_type = user_type
 
+        def __str__(self):
+            return "User(id='%s')" % self.user_id
+
     users: List[UserModel] = []
 
     @staticmethod
