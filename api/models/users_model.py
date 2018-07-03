@@ -60,7 +60,7 @@ class Users:
         return cls.users
 
     @classmethod
-    def find_user_by_id(cls, user_id) -> UserModel or None:
+    def find_user_by_id(cls, user_id) -> UserModel or bool:
         """
         Find a specific user given an id
         :param user_id:
@@ -70,7 +70,7 @@ class Users:
         for user in cls.users:
             if user.user_id == user_id:
                 return user
-        return None
+        return False
 
     @classmethod
     def find_user_by_contact(cls, contact) -> UserModel or None:
@@ -84,6 +84,19 @@ class Users:
             if user.contact == contact:
                 return user
         return None
+
+    @classmethod
+    def find_user_by_username(cls, username) -> UserModel or None:
+        """
+        Find a specific user given an id
+        :param username:
+        :return:
+        """
+
+        for user in cls.users:
+            if user.username == username:
+                return user
+        return Users.find_user_by_contact(contact=username)
 
     @classmethod
     def update_user(cls, user_id=None, full_name=None, contact=None, username=None,
