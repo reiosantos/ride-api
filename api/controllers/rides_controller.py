@@ -8,9 +8,11 @@
 """
 from flask import request, jsonify
 from flask.views import MethodView
+from flask_jwt import jwt_required, current_identity
 
-from api.handlers.return_errors import ReturnHandlers
-from api.models.rides import Rides
+from api.errors.return_errors import ReturnErrors
+from api.models.rides_model import Rides
+from api.models.users_model import Users
 from api.utils.decorators import Decorate
 from api.utils.validators import Validators
 
@@ -21,136 +23,140 @@ class RidesController(MethodView):
        used to handle ``GET`` requests. :
     """
 
+    @jwt_required()
     def get(self, ride_id=None):
         """
         responds to get requests
         :param ride_id:
         :return:
         """
-        if ride_id:
-            # perform some database operations to find the requested ride and return it
+        user = current_identity
+        if user:
+            if ride_id:
+                if user.user_type == "driver":
+                    ride = Rides.find_one_ride(ride_id=ride_id, driver_id=user.user_id)
+                else:
+                    ride = Rides.find_one_ride(ride_id=ride_id, driver_id=None)
+                if ride:
+                    return jsonify({"error_message": False, "data": ride.__dict__})
+                return ReturnErrors.ride_not_found(ride_id)
 
-            for obj in Rides.find_all_rides():
-                if obj.ride_id == ride_id:
-                    return jsonify({"error_message": False, "data": obj.__dict__})
+            return jsonify({"error_message": False, "data": [o.__dict__ for o in Rides.find_all_rides()]})
 
-            return ReturnHandlers.ride_not_found(ride_id)
-
-        return jsonify({"error_message": False, "data": [o.__dict__ for o in Rides.find_all_rides()]})
+        return ReturnErrors.user_not_found()
 
     @Decorate.receive_json
-    def post(self, ride_id=None):
+    @jwt_required()
+    def post(self):
         """
         responds to post requests. Creating new rides
         :return:
         """
-        if str(request.url_rule) == "/api/v1/rides/":
-            return RidesController.handel_post_new_ride()
+        is_driver = self.__is_driver()
+        if not isinstance(is_driver, bool):
+            return is_driver
 
-        if str(request.url_rule) == "/api/v1/rides/<int:ride_id>/requests/":
-            return RidesController.handle_request_ride(ride_id)
-
-        return ReturnHandlers.could_not_process_request()
+        return RidesController.handel_post_new_ride(current_identity)
 
     @staticmethod
-    def handel_post_new_ride():
+    def handel_post_new_ride(user: Users.UserModel):
         """
         function break down to handle specifically requests to add new rode offers
         it breaks down from the main post function, but its still called from post
         handler
         :return:
         """
-        keys = ("driver", "trip_to", "cost", "driver_contact")
+
+        keys = ("destination", "trip_from", "cost", "depart_time")
         if not set(keys).issubset(set(request.json)):
-            return ReturnHandlers.missing_fields(keys)
-
-        if not request.json["driver"] or not request.json["cost"] or not \
-                request.json["trip_to"] or not request.json["driver_contact"]:
-            return ReturnHandlers.empty_fields()
-
-        if not Validators.validate_contact(str(request.json['driver_contact'])):
-            return ReturnHandlers.invalid_contact()
+            return ReturnErrors.missing_fields(keys)
 
         if not Validators.validate_number(str(request.json['cost'])):
-            return ReturnHandlers.invalid_amount()
+            return ReturnErrors.invalid_amount()
 
-        Rides.create_ride(len(Rides.rides), driver_name=request.json['driver'],
-                          contact=request.json['driver_contact'], trip_to=request.json['trip_to'],
-                          cost=request.json['cost'])
+        if not request.json["destination"] or not request.json["trip_from"]:
+            return ReturnErrors.empty_fields()
 
-        return jsonify({"success_message": "successfully added a new ride.", "data": True}), 201
+        ride = Rides.create_ride(driver_id=user.user_id, destination=request.json['destination'],
+                                 trip_from=request.json['trip_from'],
+                                 cost=request.json['cost'], depart_time=request.json["depart_time"])
 
-    @staticmethod
-    def handle_request_ride(ride_id):
-        """
-        function break down to handle specifically requests to for response to
-        ride offers from passengers offer offers
-        it breaks down from the main post function, but its still called from post
-        handler
-        :return:
-        """
+        if ride:
+            return jsonify({"success_message": "successfully added a new ride.", "data": True}), 201
 
-        keys = ("passenger", "passenger_contact")
-        if not set(keys).issubset(set(request.json)):
-            return ReturnHandlers.missing_fields(keys)
-
-        if not ride_id or not request.json["passenger"] or \
-                not request.json["passenger_contact"]:
-            return ReturnHandlers.empty_fields()
-
-        if not Validators.validate_contact(str(request.json['passenger_contact'])):
-            return ReturnHandlers.invalid_contact()
-
-        ride = Rides.find_one_ride(ride_id)
-        if not ride:
-            return ReturnHandlers.ride_not_found(keys)
-
-        if ride.requested:
-            return ReturnHandlers.ride_already_requested()
-
-        names = request.json["passenger"]
-        contact = request.json["passenger_contact"]
-        Rides.add_request_for_ride(ride, contact, names)
-
-        return jsonify({"success_message": "Your request has been successful. The driver"
-                                           " shall be responding to you shortly", "data": True}), 201
+        return ReturnErrors.error_occurred()
 
     @Decorate.receive_json
+    @jwt_required()
     def put(self):
         """
         responds to update requests
         It allows the driver to respond to passenger requests
         :return:
         """
-        keys = ("ride_id", "trip_to", "status", "cost", "taken_by")
-        if not set(keys).issubset(set(request.json)):
-            return ReturnHandlers.missing_fields(keys)
-
-        if not request.json["ride_id"]:
-            return ReturnHandlers.empty_fields()
+        user = current_identity
+        valid = self.__validate_update_request()
+        if not isinstance(valid, bool):
+            return valid
 
         ride_id = request.json["ride_id"]
-        ride = Rides.find_one_ride(ride_id)
+        ride = Rides.find_one_ride(ride_id, user.user_id)
         if not ride:
-            return ReturnHandlers.ride_not_found(ride_id)
+            return ReturnErrors.ride_not_found(ride_id)
 
-        update = Rides.update_ride(ride, request.json["cost"], request.json["status"],
-                                   request.json["trip_to"], request.json["taken_by"])
+        update = Rides.update_ride(ride_id, user.user_id, request.json["cost"],
+                                   request.json["trip_from"], request.json["destination"],
+                                   request.json["depart_time"])
         if update:
             return jsonify({"success_message": "Update has been successful.", "data": True})
 
-        return ReturnHandlers.could_not_process_request()
+        return ReturnErrors.could_not_process_request()
 
+    def __validate_update_request(self):
+        """
+        validate request to update ride offer
+        :return:
+        """
+        is_driver = self.__is_driver()
+        if not isinstance(is_driver, bool):
+            return is_driver
+
+        keys = ("ride_id", "destination", "trip_from", "cost", "depart_time")
+        if not set(keys).issubset(set(request.json)):
+            return ReturnErrors.missing_fields(keys)
+
+        if not request.json["ride_id"] or not request.json["destination"] or \
+                not request.json["trip_from"] or not request.json["depart_time"]:
+            return ReturnErrors.empty_fields()
+
+        return True
+
+    @staticmethod
+    def __is_driver():
+        user = current_identity
+        if not user:
+            return ReturnErrors.user_not_found()
+
+        if not user.user_type == "driver":
+            return ReturnErrors.not_allowed_to_perform_this_action()
+
+        return True
+
+    @jwt_required()
     def delete(self, ride_id):
         """
         responds to update requests
         :return:
         """
+        is_driver = self.__is_driver()
+        if not isinstance(is_driver, bool):
+            return is_driver
+
         ride = Rides.find_one_ride(ride_id)
         if not ride:
-            return ReturnHandlers.ride_not_found(ride_id)
+            return ReturnErrors.ride_not_found(ride_id)
 
-        if Rides.delete_ride(ride):
+        if Rides.delete_ride(ride_id):
             return jsonify({"success_message": "Ride {0} has been deleted.".format(ride_id), "data": True})
 
         return jsonify({"error_message": "Ride {0} has not been deleted.".format(ride_id), "data": False})
