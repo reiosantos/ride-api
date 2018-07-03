@@ -32,9 +32,11 @@ class Validators:
         if not amount:
             return False
         amount_regex = re.compile("^[0-9]+$")
-        if amount_regex.match(amount):
-            return True
-
+        try:
+            if amount_regex.match(amount) and int(amount) > 0:
+                return True
+        except TypeError:
+            return False
         return False
 
     @staticmethod
@@ -48,3 +50,17 @@ class Validators:
         if not pattern.match(email):
             return False
         return True
+
+    @staticmethod
+    def validate_password(password, length) -> bool:
+        """
+        password validator
+        :param password:
+        :param length:
+        :return:
+        """
+        if not isinstance(length, int):
+            raise ValueError("length must be an integer")
+        if length > len(password):
+            return False
+        return password.isalnum()
