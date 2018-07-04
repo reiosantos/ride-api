@@ -79,7 +79,6 @@ class DatabaseConnection:
                 sql = top1 + crit
             else:
                 pass
-        # print(sql)
         cur = cls.__conn.cursor()
         cur.execute(sql)
         cls.__conn.commit()
@@ -124,4 +123,31 @@ class DatabaseConnection:
         cls.__conn.commit()
         if cur:
             return cur
+        return None
+
+    @classmethod
+    def find_detailed_requests(cls, name_of_table, criteria=None):
+
+        if not criteria:
+            query = f"""SELECT * FROM {cls.schema}.{name_of_table}"""
+        else:
+            query = f"""
+            SELECT a.request_date, a.request_id, a.status, a.taken, 
+            b.status as ride_status, b.driver_id, b.ride_id, b.departure_time, 
+            b.destination, b.post_date, b.trip_cost, b.trip_from, c.user_id, c.contact, 
+            c.full_names FROM production.requests a LEFT JOIN production.rides b ON 
+            a.ride_id_fk = b.ride_id LEFT JOIN production.users c ON 
+            a.passenger_id = c.user_id WHERE (b.driver_id='{criteria['driver_id']}' AND 
+            a.ride_id_fk='{criteria['ride_id']}')
+            """
+
+        cur = cls.__conn.cursor()
+        cur.execute(query)
+        cls.__conn.commit()
+        if cur:
+            val = cur.fetchall()
+            if len(val) == 1:
+                return val[0]
+            elif len(val) > 1:
+                return val
         return None
