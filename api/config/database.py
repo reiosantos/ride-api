@@ -202,9 +202,9 @@ class DatabaseConnection:
         return None
 
     @classmethod
-    def create_tables(cls):
+    def create_test_tables(cls):
         pass
 
     @classmethod
-    def drop_all(cls):
+    def drop_test_tables(cls):
         pass
