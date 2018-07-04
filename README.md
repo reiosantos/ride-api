@@ -16,7 +16,9 @@ Test coverage of code climate and coveralls -
 
 [![Build Status](https://travis-ci.org/reiosantos/ride-api.svg?branch=feature)](https://travis-ci.org/reiosantos/ride-api)
 [![Maintainability](https://api.codeclimate.com/v1/badges/7047d11c77cc6fb3d2db/maintainability)](https://codeclimate.com/github/reiosantos/ride-api/maintainability)
-[//]: # ([![Test Coverage](https://api.codeclimate.com/v1/badges/7047d11c77cc6fb3d2db/test_coverage)](https://codeclimate.com/github/reiosantos/ride-api/test_coverage))
+<!--
+[![Test Coverage](https://api.codeclimate.com/v1/badges/7047d11c77cc6fb3d2db/test_coverage)](https://codeclimate.com/github/reiosantos/ride-api/test_coverage)
+-->
 [![Coverage Status](https://coveralls.io/repos/github/reiosantos/ride-api/badge.svg?branch=feature)](https://coveralls.io/github/reiosantos/ride-api?branch=feature)
 
 ***Features***
