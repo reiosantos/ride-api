@@ -31,7 +31,8 @@ class RidesController(MethodView):
         :return:
         """
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         if user:
@@ -72,7 +73,8 @@ class RidesController(MethodView):
         :return:
         """
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         keys = ("destination", "trip_from", "cost", "depart_time")
@@ -112,7 +114,8 @@ class RidesController(MethodView):
             return valid
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         ride_id = request.json["ride_id"]
@@ -141,7 +144,8 @@ class RidesController(MethodView):
             return is_driver
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         keys = ("ride_id", "destination", "trip_from", "cost", "depart_time")
@@ -161,7 +165,8 @@ class RidesController(MethodView):
             return ReturnErrors.user_not_found()
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         if not user.user_type == "driver":
@@ -180,7 +185,8 @@ class RidesController(MethodView):
             return is_driver
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         ride = Rides.find_one_ride(ride_id)

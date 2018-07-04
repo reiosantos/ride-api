@@ -36,7 +36,8 @@ class RideRequestController(MethodView):
             return is_driver
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         if not is_driver:
@@ -79,7 +80,8 @@ class RideRequestController(MethodView):
         :return:
         """
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         if not current_identity:
@@ -110,7 +112,8 @@ class RideRequestController(MethodView):
         if not isinstance(valid, bool):
             return valid
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         status = request.json['status']
@@ -139,7 +142,8 @@ class RideRequestController(MethodView):
             return is_driver
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         ride = Rides.find_one_ride(ride_id)
@@ -164,7 +168,8 @@ class RideRequestController(MethodView):
     @staticmethod
     def __is_driver():
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
         if not user:
             return ReturnErrors.user_not_found(auth_token)
@@ -180,7 +185,8 @@ class RideRequestController(MethodView):
             return is_driver
 
         user = current_identity
-        del user.password
+        if hasattr(user, "password"):
+            del user.password
         auth_token = Authenticate.encode_auth_token(user)
 
         keys = ("status",)

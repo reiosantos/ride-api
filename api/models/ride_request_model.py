@@ -99,9 +99,6 @@ class RideRequests:
         elif ride_id and isinstance(response, dict):
             return {ride_id: response}
 
-        if ride_id and ride_id in all_requests:
-            return all_requests[ride_id]
-
         return all_requests
 
     @classmethod
