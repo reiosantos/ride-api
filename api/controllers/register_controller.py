@@ -30,6 +30,10 @@ class RegisterController(MethodView):
         password = post_data.get('password')
         user_type = post_data.get('user_type')
 
+        if not request.json["full_name"] or not request.json["username"] \
+                or not request.json["user_type"]:
+            return ReturnErrors.empty_fields()
+
         if not Validators.validate_contact(contact):
             return ReturnErrors.invalid_contact()
 
