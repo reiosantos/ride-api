@@ -1,5 +1,7 @@
 import unittest
 
+from flask import json
+
 from api.config.database import DatabaseConnection
 from api.run import APP
 
@@ -9,162 +11,138 @@ class TestRegistration(unittest.TestCase):
     def setUp(self):
         APP.config['TESTING'] = True
         self.client = APP.test_client
+        DatabaseConnection.init_db(APP)
         self.database = DatabaseConnection.connect()
-        self.database.create_test_tables()
+        self.database.create_test_schema()
+        self.token = None
 
     def tearDown(self):
-        self.database.drop_test_tables()
+        self.database.drop_test_schema()
 
     def test_missing_attributes(self):
         """
+        Tests missing attributes in json request (not values)
+        :return:
+        """
         res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
             username="flavia",
-            full_names="flavia",
             contact="345678",
             user_type="driver",
             password="password"
         )), content_type="application/json")
         data = json.loads(res.data.decode("utf-8"))
-        print(data)
         self.assertEqual(res.status_code, 400)
         self.assertIn("error_message", data)
         self.assertTrue(data['error_message'])
-        """
 
-    def test_decode_auth_token(self):
-        """"
-        user = User(
-            email='test@test.com',
-            password='test'
-        )
-        db.session.add(user)
-        db.session.commit()
-        auth_token = user.encode_auth_token(user.id)
-        self.assertTrue(isinstance(auth_token, bytes))
-        self.assertTrue(User.decode_auth_token(auth_token) == 1)
+    def test_empty_values(self):
         """
+        Testing empty or missing values
+        :return:
+        """
+        res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
+            username="flavia",
+            full_name="",
+            contact="345678",
+            user_type="driver",
+            password=""
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("error_message", data)
+        self.assertTrue(data['error_message'])
 
-    def test_registration(self):
+    def test_invalid_contact(self):
+        """
+        testing invalid contact
+        :return:
+        """
+        res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
+            username="flavia",
+            full_name="flavia",
+            contact="345678",
+            user_type="driver",
+            password=""
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("error_message", data)
+        self.assertTrue(data['error_message'])
+
+    def test_minimum_length_password(self):
+        """
+        valid data for registration
+        :return:
+        """
+        res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
+            username="flavia",
+            full_name="flavia",
+            contact="345678",
+            user_type="driver",
+            password="test"
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("error_message", data)
+        self.assertTrue(data['error_message'])
+
+    def test_valid_registration_and_login(self):
         """ Test for user registration """
-        """
-        with self.client:
-            response = self.client.post(
-                '/auth/register',
-                data=json.dumps(dict(
-                    email='joe@gmail.com',
-                    password='123456'
-                )),
-                content_type='application/json'
-            )
-            data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully registered.')
-            self.assertTrue(data['auth_token'])
-            self.assertTrue(response.content_type == 'application/json')
-            self.assertEqual(response.status_code, 201)
-        """
+        res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
+            username="flavia",
+            full_name="flavia",
+            contact="0897654324",
+            user_type="driver",
+            password="test123"
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 201)
+        self.assertNotIn("error_message", data)
+        self.assertIn("success_message", data)
+        self.assertEqual(data['success_message'], 'Successfully registered.')
 
-    def test_valid_logout(self):
-        """ Test for logout before token expires """
-        """
-        with self.client:
-            # user registration
-            resp_register = self.client.post(
-                '/auth/register',
-                data=json.dumps(dict(
-                    email='joe@gmail.com',
-                    password='123456'
-                )),
-                content_type='application/json',
-            )
-            data_register = json.loads(resp_register.data.decode())
-            self.assertTrue(data_register['status'] == 'success')
-            self.assertTrue(
-                data_register['message'] == 'Successfully registered.')
-            self.assertTrue(data_register['auth_token'])
-            self.assertTrue(resp_register.content_type == 'application/json')
-            self.assertEqual(resp_register.status_code, 201)
-            # user login
-            resp_login = self.client.post(
-                '/auth/login',
-                data=json.dumps(dict(
-                    email='joe@gmail.com',
-                    password='123456'
-                )),
-                content_type='application/json'
-            )
-            data_login = json.loads(resp_login.data.decode())
-            self.assertTrue(data_login['status'] == 'success')
-            self.assertTrue(data_login['message'] == 'Successfully logged in.')
-            self.assertTrue(data_login['auth_token'])
-            self.assertTrue(resp_login.content_type == 'application/json')
-            self.assertEqual(resp_login.status_code, 200)
-            # valid token logout
-            response = self.client.post(
-                '/auth/logout',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
-            )
-            data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully logged out.')
-            self.assertEqual(response.status_code, 200)
-        """
+        res = self.client().post('/api/v1/auth/login/', data=json.dumps(dict(
+            username="flavi",
+            password="test12",
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 404)
+        self.assertIn("error_message", data)
+        self.assertEqual(data['error_message'], 'User does not exist. '
+                                                'Provide a valid phone number')
 
-    def test_invalid_logout(self):
-        """ Testing logout after the token expires """
-        """
-        with self.client:
-            # user registration
-            resp_register = self.client.post(
-                '/auth/register',
-                data=json.dumps(dict(
-                    email='joe@gmail.com',
-                    password='123456'
-                )),
-                content_type='application/json',
+        res = self.client().post('/api/v1/auth/login/', data=json.dumps(dict(
+            username="flavia",
+            password="test12",
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 401)
+        self.assertIn("error_message", data)
+        self.assertEqual(data['error_message'], 'Wrong username or password.')
+
+        res = self.client().post('/api/v1/auth/login/', data=json.dumps(dict(
+            username="flavia",
+            password="test123",
+        )), content_type="application/json")
+        data = json.loads(res.data.decode("utf-8"))
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("auth_token", data)
+        self.assertIn("success_message", data)
+        self.assertEqual(data['success_message'], 'Successfully logged in.')
+
+        self.token = data['auth_token']
+
+        # valid token logout
+        response = self.client().post(
+            'api/v1/auth/logout',
+            headers=dict(
+                Authorization='Bearer ' + self.token
             )
-            data_register = json.loads(resp_register.data.decode())
-            self.assertTrue(data_register['status'] == 'success')
-            self.assertTrue(
-                data_register['message'] == 'Successfully registered.')
-            self.assertTrue(data_register['auth_token'])
-            self.assertTrue(resp_register.content_type == 'application/json')
-            self.assertEqual(resp_register.status_code, 201)
-            # user login
-            resp_login = self.client.post(
-                '/auth/login',
-                data=json.dumps(dict(
-                    email='joe@gmail.com',
-                    password='123456'
-                )),
-                content_type='application/json'
-            )
-            data_login = json.loads(resp_login.data.decode())
-            self.assertTrue(data_login['status'] == 'success')
-            self.assertTrue(data_login['message'] == 'Successfully logged in.')
-            self.assertTrue(data_login['auth_token'])
-            self.assertTrue(resp_login.content_type == 'application/json')
-            self.assertEqual(resp_login.status_code, 200)
-            # invalid token logout
-            time.sleep(6)
-            response = self.client.post(
-                '/auth/logout',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
-            )
-            data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'fail')
-            self.assertTrue(
-                data['message'] == 'Signature expired. Please log in again.')
-            self.assertEqual(response.status_code, 401)
-        """
+        )
+        data = json.loads(response.data.decode())
+        self.assertTrue(data['status'] == 'success')
+        self.assertTrue(data['message'] == 'Successfully logged out.')
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == '__main__':
