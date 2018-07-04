@@ -10,7 +10,7 @@ class Utils:
 
     @staticmethod
     def __create_unique_number():
-        return datetime.now().strftime("%Y%m%d%H%M%S")
+        return datetime.now().strftime("%Y%m%d%H%M%S%f")
 
     @staticmethod
     def generate_request_id():
