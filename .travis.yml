@@ -8,12 +8,9 @@ install:
 - pip3 install coverage
 - pip3 install coveralls
 script:
-- cd api
-- pytest
-- coverage3 run tests/test_views.py
+- coverage run -m py.test
 - coverage3 report
 - coveralls
-- cd ..
 env:
   global:
   - CC_TEST_REPORTER_ID=b29a2c88dc92ed989f9cfa373da995397200a31407fbb11b9a50de537d93138c
