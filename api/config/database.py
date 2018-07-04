@@ -5,7 +5,6 @@ import psycopg2 as pg
 from psycopg2.extras import RealDictCursor
 
 from api.config.config import DatabaseConfig
-from api.run import APP
 
 
 class DatabaseConnection:
@@ -38,17 +37,20 @@ class DatabaseConnection:
             self.conn.close()
 
     @classmethod
-    def connect(cls):
+    def init_db(cls, app):
         """
         provides a database connection object
         creates the object
         :return:
         """
-        if APP.config['TESTING']:
+        if app.config['TESTING']:
             cls.schema = DatabaseConfig.SCHEMA_TESTING
 
         if not cls.__conn:
             cls.__conn = cls.DbConnection(cls.schema).conn
+
+    @classmethod
+    def connect(cls):
         return cls
 
     @classmethod
@@ -202,9 +204,21 @@ class DatabaseConnection:
         return None
 
     @classmethod
-    def create_test_tables(cls):
-        pass
+    def create_test_schema(cls):
+        """
+        create test schema
+        :return:
+        """
+        cur = cls.__conn.cursor()
+        cur.execute(open("../../database_tests.sql", "r").read())
+        cls.__conn.commit()
 
     @classmethod
-    def drop_test_tables(cls):
-        pass
+    def drop_test_schema(cls):
+        """
+        delete test schema after using it
+        :return:
+        """
+        cur = cls.__conn.cursor()
+        cur.execute("""DROP SCHEMA IF EXISTS tests CASCADE""")
+        cls.__conn.commit()
