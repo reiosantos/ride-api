@@ -1,11 +1,16 @@
 """User module to handle user actions like creation"""
 from typing import List
 
+from api.config.config import DatabaseConfig
+from api.config.database import DatabaseConnection
 from api.utils.utils import JSONSerializable, Utils
 
 
 class Users:
     """Define user module attributes accessed by callers """
+
+    __table = "users"
+    __database = DatabaseConnection.connect(DatabaseConfig.SCHEMA_PRODUCTION)
 
     class UserModel(JSONSerializable):
         """ User modal to hold user data"""
@@ -34,8 +39,8 @@ class Users:
 
     users: List[UserModel] = []
 
-    @staticmethod
-    def create_user(full_name=None, contact=None, username=None,
+    @classmethod
+    def create_user(cls, full_name=None, contact=None, username=None,
                     password=None, user_type="passenger") -> UserModel or None:
         """
         create new user withe details below
@@ -48,16 +53,20 @@ class Users:
         """
 
         user = Users.UserModel(full_name, contact, username, password, user_type)
-        Users.users.append(user)
-        return user
+        data = {
+            "username": username,
+            "full_names": full_name,
+            "contact": contact,
+            "password": password.decode("utf8"),
+            "user_type": user_type,
+            "registration_date": user.registration_date,
+            "user_id": user.user_id
+        }
+        ret = cls.__database.insert(cls.__table, data)
+        if not ret:
+            return None
 
-    @classmethod
-    def get_all_users(cls) -> List[UserModel]:
-        """
-        Fetch a list of all users
-        :return:
-        """
-        return cls.users
+        return user
 
     @classmethod
     def find_user_by_id(cls, user_id) -> UserModel or bool:
@@ -66,10 +75,16 @@ class Users:
         :param user_id:
         :return:
         """
-
-        for user in cls.users:
-            if user.user_id == user_id:
-                return user
+        criteria = {
+            "user_id": user_id
+        }
+        res = cls.__database.find(cls.__table, criteria=criteria)
+        if res and isinstance(res, dict):
+            user = cls.UserModel(res['full_names'], res['contact'], res['username'],
+                                 None, res['user_type'])
+            user.user_id = res['user_id']
+            user.password = res['password'].encode("utf8")
+            return user
         return False
 
     @classmethod
@@ -80,9 +95,16 @@ class Users:
         :return:
         """
 
-        for user in cls.users:
-            if user.contact == contact:
-                return user
+        criteria = {
+            "contact": contact
+        }
+        res = cls.__database.find(cls.__table, criteria=criteria)
+        if res and isinstance(res, dict):
+            user = cls.UserModel(res['full_names'], res['contact'], res['username'],
+                                 None, res['user_type'])
+            user.user_id = res['user_id']
+            user.password = res['password'].encode("utf8")
+            return user
         return None
 
     @classmethod
@@ -93,10 +115,35 @@ class Users:
         :return:
         """
 
-        for user in cls.users:
-            if user.username == username:
-                return user
-        return Users.find_user_by_contact(contact=username)
+        criteria = {
+            "username": username
+        }
+        res = cls.__database.find(cls.__table, criteria=criteria)
+        if res and isinstance(res, dict):
+            user = cls.UserModel(res['full_names'], res['contact'], res['username'],
+                                 None, res['user_type'])
+            user.user_id = res['user_id']
+            user.password = res['password'].encode("utf8")
+            return user
+        return None
+
+    @classmethod
+    def get_all_users(cls) -> List[UserModel] or None:
+        """
+        Fetch a list of all users
+        :return:
+        """
+        response = cls.__database.find(cls.__table)
+        if response and isinstance(response, list):
+            us: List[cls.UserModel] = []
+            for res in response:
+                user = cls.UserModel(res['full_names'], res['contact'], res['username'],
+                                     None, res['user_type'])
+                user.user_id = res['user_id']
+                user.password = res['password'].encode("utf8")
+                us.append(user)
+            return us
+        return None
 
     @classmethod
     def update_user(cls, user_id=None, full_name=None, contact=None, username=None,
@@ -115,17 +162,18 @@ class Users:
         user = cls.find_user_by_id(user_id)
         if not user:
             return False
-        index = cls.users.index(user)
 
-        user.user_type = user_type
-        if password:
-            user.password = password
-        user.full_name = full_name
-        user.contact = contact
-        user.username = username
-
-        cls.users.insert(index, user)
-        return True
+        selection = {
+            "user_id": user_id,
+        }
+        data = {
+            "full_names": full_name or user.full_name,
+            "contact": contact or user.contact,
+            "username": username or user.username,
+            "user_type": user_type or user.user_type,
+            "password": password or user.password
+        }
+        return cls.__database.update(cls.__table, selection, data)
 
     @classmethod
     def delete_user(cls, user_id) -> bool:
@@ -139,5 +187,7 @@ class Users:
         if not user:
             return False
 
-        cls.users.remove(user)
-        return True
+        selection = {
+            "user_id": user_id,
+        }
+        return cls.__database.delete(cls.__table, selection)
