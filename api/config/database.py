@@ -5,6 +5,7 @@ import psycopg2 as pg
 from psycopg2.extras import RealDictCursor
 
 from api.config.config import DatabaseConfig
+from api.run import APP
 
 
 class DatabaseConnection:
@@ -13,7 +14,7 @@ class DatabaseConnection:
     Handles all database related issues/processes
     """
     __conn = None
-    schema = None
+    schema = DatabaseConfig.SCHEMA_PRODUCTION
 
     class DbConnection(object):
         """
@@ -37,16 +38,17 @@ class DatabaseConnection:
             self.conn.close()
 
     @classmethod
-    def connect(cls, schema=DatabaseConfig.SCHEMA_PRODUCTION):
+    def connect(cls):
         """
         provides a database connection object
         creates the object
-        :param schema:
         :return:
         """
+        if APP.config['TESTING']:
+            cls.schema = DatabaseConfig.SCHEMA_TESTING
+
         if not cls.__conn:
-            cls.__conn = cls.DbConnection(schema).conn
-        cls.schema = schema
+            cls.__conn = cls.DbConnection(cls.schema).conn
         return cls
 
     @classmethod
@@ -198,3 +200,11 @@ class DatabaseConnection:
             elif len(val) > 1:
                 return val
         return None
+
+    @classmethod
+    def create_tables(cls):
+        pass
+
+    @classmethod
+    def drop_all(cls):
+        pass
