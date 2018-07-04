@@ -42,7 +42,7 @@ class RideRequestController(MethodView):
                 if not Rides.find_one_ride(ride_id):
                     return ReturnErrors.ride_not_found(ride_id)
 
-                req = RideRequests.find_all_detailed_requests(user.user_id)
+                req = RideRequests.find_all_detailed_requests(user.user_id, ride_id)
                 if req and (ride_id in req.keys()):
                     return jsonify({"error_message": False, "data": req[ride_id]})
 
@@ -104,7 +104,7 @@ class RideRequestController(MethodView):
             return ReturnErrors.this_value_is_not_allowed("status", keys1)
 
         update = RideRequests.update_request_status(status, request_id,
-                                                    current_identity['user_id'])
+                                                    current_identity.user_id)
         if update:
             return jsonify({"success_message": "Update has been successful.", "data": True})
 
