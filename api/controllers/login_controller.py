@@ -49,7 +49,7 @@ class LoginController(MethodView):
                     return jsonify(response_object), 200
             return ReturnErrors.user_not_found()
 
-        except Exception:
+        except FileNotFoundError:
             response_object = {
                 'data': False,
                 'error_message': 'Try again'
