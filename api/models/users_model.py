@@ -1,7 +1,6 @@
 """User module to handle user actions like creation"""
 from typing import List
 
-from api.config.config import DatabaseConfig
 from api.config.database import DatabaseConnection
 from api.utils.utils import JSONSerializable, Utils
 
@@ -10,7 +9,7 @@ class Users:
     """Define user module attributes accessed by callers """
 
     __table = "users"
-    __database = DatabaseConnection.connect(DatabaseConfig.SCHEMA_PRODUCTION)
+    __database = DatabaseConnection.connect()
 
     class UserModel(JSONSerializable):
         """ User modal to hold user data"""

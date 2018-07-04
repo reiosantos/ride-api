@@ -1,4 +1,3 @@
-from api.config.config import DatabaseConfig
 from api.config.database import DatabaseConnection
 from api.models.rides_model import Rides
 from api.utils.utils import JSONSerializable, Utils
@@ -6,7 +5,7 @@ from api.utils.utils import JSONSerializable, Utils
 
 class RideRequests:
     __table = "requests"
-    __database = DatabaseConnection.connect(DatabaseConfig.SCHEMA_PRODUCTION)
+    __database = DatabaseConnection.connect()
 
     class RequestStatus:
         pending = "pending"

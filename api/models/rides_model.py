@@ -1,7 +1,6 @@
 """Rides Module . Handles all rides and their possible actions"""
 from typing import List
 
-from api.config.config import DatabaseConfig
 from api.config.database import DatabaseConnection
 from api.utils.utils import JSONSerializable, Utils
 
@@ -10,7 +9,7 @@ class Rides:
     """Ride class contains ride modal and ride methods"""
 
     __table = "rides"
-    __database = DatabaseConnection.connect(DatabaseConfig.SCHEMA_PRODUCTION)
+    __database = DatabaseConnection.connect()
 
     class RideStatus:
         """RideStatus class"""
