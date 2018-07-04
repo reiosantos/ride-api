@@ -10,11 +10,10 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt import JWT
 
-from api.errors.request_errors import RequestErrors
-
 sys.path.append(os.path.curdir)
 sys.path.append(os.path.pardir)
 
+from api.errors.request_errors import RequestErrors
 from api.auth.user_authentication import Authenticate
 from api.config.config import HostConfig, EnvironmentConfig, ServerConfig
 from api.routes import Urls
