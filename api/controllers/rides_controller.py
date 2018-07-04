@@ -10,9 +10,9 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_identity
 
+from api.auth.user_authentication import Authenticate
 from api.errors.return_errors import ReturnErrors
 from api.models.rides_model import Rides
-from api.models.users_model import Users
 from api.utils.decorators import Decorate
 from api.utils.validators import Validators
 
@@ -31,6 +31,9 @@ class RidesController(MethodView):
         :return:
         """
         user = current_identity
+        del user.password
+        auth_token = Authenticate.encode_auth_token(user)
+
         if user:
             if ride_id:
                 if user.user_type == "driver":
@@ -38,12 +41,14 @@ class RidesController(MethodView):
                 else:
                     ride = Rides.find_one_ride(ride_id=ride_id, driver_id=None)
                 if ride:
-                    return jsonify({"error_message": False, "data": ride.__dict__})
-                return ReturnErrors.ride_not_found(ride_id)
+                    return jsonify({"error_message": False, "access_token": auth_token,
+                                    "data": ride.__dict__})
+                return ReturnErrors.ride_not_found(ride_id, auth_token)
 
-            return jsonify({"error_message": False, "data": [o.__dict__ for o in Rides.find_all_rides()]})
+            return jsonify({"error_message": False, "access_token": auth_token,
+                            "data": [o.__dict__ for o in Rides.find_all_rides()]})
 
-        return ReturnErrors.user_not_found()
+        return ReturnErrors.user_not_found(auth_token)
 
     @Decorate.receive_json
     @jwt_required()
@@ -56,35 +61,43 @@ class RidesController(MethodView):
         if not isinstance(is_driver, bool):
             return is_driver
 
-        return RidesController.handel_post_new_ride(current_identity)
+        return RidesController.handel_post_new_ride()
 
     @staticmethod
-    def handel_post_new_ride(user: Users.UserModel):
+    def handel_post_new_ride():
         """
         function break down to handle specifically requests to add new rode offers
         it breaks down from the main post function, but its still called from post
         handler
         :return:
         """
+        user = current_identity
+        del user.password
+        auth_token = Authenticate.encode_auth_token(user)
 
         keys = ("destination", "trip_from", "cost", "depart_time")
         if not set(keys).issubset(set(request.json)):
-            return ReturnErrors.missing_fields(keys)
+            return ReturnErrors.missing_fields(keys, auth_token)
 
         if not Validators.validate_number(str(request.json['cost'])):
-            return ReturnErrors.invalid_amount()
+            return ReturnErrors.invalid_amount(auth_token)
 
         if not request.json["destination"] or not request.json["trip_from"]:
-            return ReturnErrors.empty_fields()
+            return ReturnErrors.empty_fields(auth_token)
 
-        ride = Rides.create_ride(driver_id=user.user_id, destination=request.json['destination'],
+        ride = Rides.create_ride(driver_id=user.user_id,
+                                 destination=request.json['destination'],
                                  trip_from=request.json['trip_from'],
-                                 cost=request.json['cost'], depart_time=request.json["depart_time"])
+                                 cost=request.json['cost'],
+                                 depart_time=request.json["depart_time"])
 
         if ride:
-            return jsonify({"success_message": "successfully added a new ride.", "data": True}), 201
+            return jsonify({"success_message": "successfully added a"
+                                               " new ride.",
+                            "access_token": auth_token,
+                            "data": True}), 201
 
-        return ReturnErrors.error_occurred()
+        return ReturnErrors.error_occurred(auth_token)
 
     @Decorate.receive_json
     @jwt_required()
@@ -94,23 +107,29 @@ class RidesController(MethodView):
         It allows the driver to respond to passenger requests
         :return:
         """
-        user = current_identity
         valid = self.__validate_update_request()
         if not isinstance(valid, bool):
             return valid
 
+        user = current_identity
+        del user.password
+        auth_token = Authenticate.encode_auth_token(user)
+
         ride_id = request.json["ride_id"]
         ride = Rides.find_one_ride(ride_id, user.user_id)
         if not ride:
-            return ReturnErrors.ride_not_found(ride_id)
+            return ReturnErrors.ride_not_found(ride_id, auth_token)
 
         update = Rides.update_ride(ride_id, user.user_id, request.json["cost"],
-                                   request.json["trip_from"], request.json["destination"],
+                                   request.json["trip_from"],
+                                   request.json["destination"],
                                    request.json["depart_time"])
         if update:
-            return jsonify({"success_message": "Update has been successful.", "data": True})
+            return jsonify({"success_message": "Update has been successful.",
+                            "access_token": auth_token,
+                            "data": True})
 
-        return ReturnErrors.could_not_process_request()
+        return ReturnErrors.could_not_process_request(auth_token)
 
     def __validate_update_request(self):
         """
@@ -121,13 +140,17 @@ class RidesController(MethodView):
         if not isinstance(is_driver, bool):
             return is_driver
 
+        user = current_identity
+        del user.password
+        auth_token = Authenticate.encode_auth_token(user)
+
         keys = ("ride_id", "destination", "trip_from", "cost", "depart_time")
         if not set(keys).issubset(set(request.json)):
-            return ReturnErrors.missing_fields(keys)
+            return ReturnErrors.missing_fields(keys, auth_token)
 
         if not request.json["ride_id"] or not request.json["destination"] or \
                 not request.json["trip_from"] or not request.json["depart_time"]:
-            return ReturnErrors.empty_fields()
+            return ReturnErrors.empty_fields(auth_token)
 
         return True
 
@@ -137,8 +160,12 @@ class RidesController(MethodView):
         if not user:
             return ReturnErrors.user_not_found()
 
+        user = current_identity
+        del user.password
+        auth_token = Authenticate.encode_auth_token(user)
+
         if not user.user_type == "driver":
-            return ReturnErrors.not_allowed_to_perform_this_action()
+            return ReturnErrors.not_allowed_to_perform_this_action(auth_token)
 
         return True
 
@@ -152,11 +179,21 @@ class RidesController(MethodView):
         if not isinstance(is_driver, bool):
             return is_driver
 
+        user = current_identity
+        del user.password
+        auth_token = Authenticate.encode_auth_token(user)
+
         ride = Rides.find_one_ride(ride_id)
         if not ride:
-            return ReturnErrors.ride_not_found(ride_id)
+            return ReturnErrors.ride_not_found(ride_id, auth_token)
 
         if Rides.delete_ride(ride_id):
-            return jsonify({"success_message": "Ride {0} has been deleted.".format(ride_id), "data": True})
+            return jsonify({"success_message": "Ride {0} has been "
+                                               "deleted.".format(ride_id),
+                            "access_token": auth_token,
+                            "data": True})
 
-        return jsonify({"error_message": "Ride {0} has not been deleted.".format(ride_id), "data": False})
+        return jsonify({"error_message": "Ride {0} has not been "
+                                         "deleted.".format(ride_id),
+                        "access_token": auth_token,
+                        "data": False})

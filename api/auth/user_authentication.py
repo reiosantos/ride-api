@@ -54,7 +54,7 @@ class Authenticate:
             }
             return jwt.encode(payload, current_app.config.get('SECRET_KEY'),
                               algorithm='HS256')
-        except FileNotFoundError as ex:
+        except Exception as ex:
             return ex
 
     @staticmethod
