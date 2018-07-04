@@ -10,6 +10,8 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt import JWT
 
+from api.config.database import DatabaseConnection
+
 sys.path.append(os.path.curdir)
 sys.path.append(os.path.pardir)
 
@@ -33,6 +35,8 @@ class Server:
         app.errorhandler(500)(RequestErrors.internal_server_error)
         Urls.generate(app)
         CORS(app)
+        with app.app_context():
+            DatabaseConnection.init_db(app)
         return app
 
 
