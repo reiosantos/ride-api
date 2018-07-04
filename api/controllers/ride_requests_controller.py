@@ -103,7 +103,8 @@ class RideRequestController(MethodView):
         if status not in set(keys1):
             return ReturnErrors.this_value_is_not_allowed("status", keys1)
 
-        update = RideRequests.update_request_status(status, request_id)
+        update = RideRequests.update_request_status(status, request_id,
+                                                    current_identity['user_id'])
         if update:
             return jsonify({"success_message": "Update has been successful.", "data": True})
 
