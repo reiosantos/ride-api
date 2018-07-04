@@ -33,7 +33,7 @@ class RideRequests:
     @classmethod
     def add_request_for_ride(cls, ride_id, passenger_id) -> bool:
         """
-        create new ride requesr
+        create new ride request
         :param ride_id:
         :param passenger_id:
         :return:

@@ -59,7 +59,8 @@ class RegisterController(MethodView):
                 }
                 return jsonify(response_object), 201
 
-            except Exception:
+            except Exception as ex:
+                print(ex)
                 return ReturnErrors.error_occurred()
         else:
             return ReturnErrors.user_already_exists()

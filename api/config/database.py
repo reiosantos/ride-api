@@ -9,6 +9,7 @@ from api.config.config import DatabaseConfig
 
 class DatabaseConnection:
     __conn = None
+    schema = None
 
     class __Connection(object):
 
