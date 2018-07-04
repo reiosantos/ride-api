@@ -40,8 +40,6 @@ class Rides:
             self.cost = cost
             self.status = Rides.RideStatus.available
 
-    rides: List[RideModel] = []
-
     @classmethod
     def create_ride(cls, driver_id, destination, cost, trip_from, depart_time) -> RideModel or None:
         """

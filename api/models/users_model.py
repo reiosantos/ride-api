@@ -37,8 +37,6 @@ class Users:
         def __str__(self):
             return "User(id='%s')" % self.user_id
 
-    users: List[UserModel] = []
-
     @classmethod
     def create_user(cls, full_name=None, contact=None, username=None,
                     password=None, user_type="passenger") -> UserModel or None:
