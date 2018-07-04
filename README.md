@@ -64,10 +64,25 @@ The app can then be run with the following commands.
 ```bash
 cd api
 
-python app.py
+python run.py
 ```
 
 - Now you can access the system api via URLs:
+
+* To create an account, method[POST]
+```http
+http://localhost:5000/api/v1/auth/signup/
+```
+
+* To login to an account, method[POST]
+```http
+http://localhost:5000/api/v1/auth/login/
+```
+* To logout from an account, method[POST]
+
+```http
+http://localhost:5000/api/v1/auth/logout/
+```
 
 * To access all rides, method[GET]
 ```http
@@ -81,7 +96,17 @@ http://localhost:5000/apis/v1/rides/5/
 
 * To delete a particular ride for-example 4, method[DELETE]
 ```http
-http://localhost:5000/apis/v1/rides/delete/4/
+http://localhost:5000/apis/v1/rides/4/
+```
+
+* To update a particular ride, method[PUT]
+```http
+http://localhost:5000/api/v1/rides/
+```
+
+* To insert a new ride, method[POST]
+```http
+http://localhost:5000/api/v1/rides/
 ```
 
 * To send a request to join a particular ride for-example 4, method[POST]
@@ -89,14 +114,21 @@ http://localhost:5000/apis/v1/rides/delete/4/
 http://localhost:5000/apis/v1/rides/4/request/
 ```
 
-* To update a particular ride, method[PUT]
+* To view requests for a particular ride for-example 4, method[GET]
 ```http
-http://localhost:5000/api/v1/rides/update/
+http://localhost:5000/apis/v1/rides/4/request/
 ```
 
-* To insert a new ride, method[POST]
+* To update a request for a ride for-example 4, 
+and request number 5 hod[PUT]
 ```http
-http://localhost:5000/api/v1/rides/
+http://localhost:5000/apis/v1/rides/4/request/5/
+```
+
+* To delete a request of a particular ride 
+for-example 4, and ride 5 method[DELETE]
+```http
+http://localhost:5000/apis/v1/rides/4/request/5/
 ```
 
 ## Running the tests
