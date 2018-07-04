@@ -84,7 +84,8 @@ class RidesController(MethodView):
         if not Validators.validate_number(str(request.json['cost'])):
             return ReturnErrors.invalid_amount(auth_token)
 
-        if not request.json["destination"] or not request.json["trip_from"]:
+        if not request.json["destination"] or not request.json["depart_time"] \
+                or not request.json["trip_from"]:
             return ReturnErrors.empty_fields(auth_token)
 
         ride = Rides.create_ride(driver_id=user.user_id,
