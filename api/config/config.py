@@ -30,7 +30,7 @@ class EnvironmentConfig(ServerConfig):
     It extends the server congig class
     """
     DEBUG = True
-    TESTING = True
+    TESTING = False
     ENV = "development"
 
 
