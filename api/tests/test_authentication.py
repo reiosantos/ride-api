@@ -1,19 +1,31 @@
 import unittest
 
+from api.config.database import DatabaseConnection
 from api.run import APP
 
 
 class TestRegistration(unittest.TestCase):
 
     def setUp(self):
+        APP.config['TESTING'] = True
         self.client = APP.test_client
+        self.database = DatabaseConnection.connect()
+        self.database.create_test_tables()
+
+    def tearDown(self):
+        self.database.drop_test_tables()
 
     def test_missing_attributes(self):
         """
-        res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict()),
-                                 content_type="application/json")
+        res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
+            username="flavia",
+            full_names="flavia",
+            contact="345678",
+            user_type="driver",
+            password="password"
+        )), content_type="application/json")
         data = json.loads(res.data.decode("utf-8"))
-
+        print(data)
         self.assertEqual(res.status_code, 400)
         self.assertIn("error_message", data)
         self.assertTrue(data['error_message'])
