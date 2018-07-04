@@ -8,10 +8,18 @@ from api.config.config import DatabaseConfig
 
 
 class DatabaseConnection:
+    """
+    Database connection class
+    Handles all database related issues/processes
+    """
     __conn = None
     schema = None
 
-    class __Connection(object):
+    class DbConnection(object):
+        """
+        class creates the connection object abd sets
+        auto commit to False
+        """
 
         def __init__(self, schema):
             self.schema = schema
@@ -30,13 +38,25 @@ class DatabaseConnection:
 
     @classmethod
     def connect(cls, schema=DatabaseConfig.SCHEMA_PRODUCTION):
+        """
+        provides a database connection object
+        creates the object
+        :param schema:
+        :return:
+        """
         if not cls.__conn:
-            cls.__conn = cls.__Connection(schema).conn
+            cls.__conn = cls.DbConnection(schema).conn
         cls.schema = schema
         return cls
 
     @classmethod
     def insert(cls, table, data):
+        """
+        handle all insertions into the database
+        :param table:
+        :param data:
+        :return:
+        """
         if not table or not data or not isinstance(data, dict):
             return False
         columns = tuple(data.keys())
@@ -63,6 +83,13 @@ class DatabaseConnection:
 
     @classmethod
     def find(cls, name_of_table, criteria=None, join=None):
+        """
+        handles all queries to retrieve data
+        :param name_of_table:
+        :param criteria:
+        :param join:
+        :return:
+        """
         sql = ""
         if not criteria and not join:
             sql = f"""SELECT * FROM {cls.schema}.{name_of_table}"""
@@ -75,7 +102,8 @@ class DatabaseConnection:
                 if len(columns) == 1:
                     crit = f""" "{columns[0]}"='{values[0]}' )"""
                 else:
-                    crit = " AND ".join([f""" "{k}" = '{v}' """ for k, v in criteria.items()]) + """)"""
+                    crit = " AND ".join([f""" "{k}" = '{v}' """ for k, v in
+                                         criteria.items()]) + """)"""
 
                 sql = top1 + crit
             else:
@@ -93,6 +121,13 @@ class DatabaseConnection:
 
     @classmethod
     def update(cls, table_name, selection, update):
+        """
+        Handles update queries
+        :param table_name:
+        :param selection:
+        :param update:
+        :return:
+        """
 
         _top = f"""UPDATE {cls.schema}.{table_name} SET """
 
@@ -113,6 +148,12 @@ class DatabaseConnection:
 
     @classmethod
     def delete(cls, table_name, selection):
+        """
+        handles delete queries
+        :param table_name:
+        :param selection:
+        :return:
+        """
         _top = f"""DELETE FROM {cls.schema}.{table_name} WHERE """
 
         cols = " AND ".join([f""" "{col}"='{val}' """ for col, val in selection.items()])
@@ -128,7 +169,12 @@ class DatabaseConnection:
 
     @classmethod
     def find_detailed_requests(cls, name_of_table, criteria=None):
-
+        """
+        specific query handler for requests
+        :param name_of_table:
+        :param criteria:
+        :return:
+        """
         if not criteria:
             query = f"""SELECT * FROM {cls.schema}.{name_of_table}"""
         else:

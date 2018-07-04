@@ -55,6 +55,8 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 disable=print-statement,
+        broad-except,
+        import-error,
         wrong-import-position,
         parameter-unpacking,
         unpacking-in-except,

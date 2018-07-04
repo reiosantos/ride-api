@@ -14,6 +14,10 @@ class LogoutController(MethodView):
 
     @classmethod
     def post(cls):
+        """
+        handle logout requests
+        :return:
+        """
         # get auth token
         auth_header = request.headers.get('Authorization')
         if auth_header:
@@ -29,10 +33,10 @@ class LogoutController(MethodView):
                         'message': 'Successfully logged out.'
                     }
                     return jsonify(response_object), 200
-                except Exception as e:
+                except Exception as ex:
                     response_object = {
                         'status': 'fail',
-                        'message': e
+                        'message': ex
                     }
                     return jsonify(response_object), 200
             else:

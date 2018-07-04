@@ -18,8 +18,9 @@ class LoginController(MethodView):
     User Login Resource
     """
 
+    @staticmethod
     @Decorate.receive_json
-    def post(self):
+    def post():
         """
         login user and create jwt token
         :return:
