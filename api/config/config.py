@@ -32,3 +32,18 @@ class EnvironmentConfig(ServerConfig):
     DEBUG = True
     TESTING = True
     ENV = "development"
+
+
+class DatabaseConfig:
+    """
+    System configuration settings for running environment
+    They can be changed at any time.
+    It extends the server congig class
+    """
+    HOST = "127.0.0.1"
+    PORT = "5432"
+    DATABASE = "ride-api"
+    SCHEMA_PRODUCTION = "production"
+    SCHEMA_TESTING = "tests"
+    USER = "postgres"
+    PASSWORD = "santos"
