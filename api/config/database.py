@@ -45,6 +45,8 @@ class DatabaseConnection:
         """
         if app.config['TESTING']:
             cls.schema = DatabaseConfig.SCHEMA_TESTING
+        else:
+            cls.schema = DatabaseConfig.SCHEMA_PRODUCTION
 
         if not cls.__conn:
             cls.__conn = cls.DbConnection(cls.schema).conn
@@ -212,7 +214,22 @@ class DatabaseConnection:
         cur = cls.__conn.cursor()
         # cur.execute(open("../../database_tests.sql", "r").read())
         cur.execute(
-            """            
+            """     
+            SET statement_timeout = 0;
+            SET lock_timeout = 0;
+            SET idle_in_transaction_session_timeout = 0;
+            SET client_encoding = 'UTF8';
+            SET standard_conforming_strings = ON;
+            SELECT pg_catalog.set_config('search_path', '', FALSE);
+            SET check_function_bodies = FALSE;
+            SET client_min_messages = WARNING;
+            SET row_security = OFF;
+            
+            CREATE DATABASE "ride-api" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
+                        
+            ALTER DATABASE "ride-api"
+            OWNER TO postgres;
+       
             SET statement_timeout = 0;
             SET lock_timeout = 0;
             SET idle_in_transaction_session_timeout = 0;
