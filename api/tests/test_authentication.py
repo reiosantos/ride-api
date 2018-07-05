@@ -88,6 +88,7 @@ class TestRegistration(unittest.TestCase):
 
     def test_valid_registration_and_login(self):
         """ Test for user registration """
+
         res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
             username="flavia",
             full_name="flavia",

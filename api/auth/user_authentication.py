@@ -44,6 +44,7 @@ class Authenticate:
         Generates the Auth Token
         :return: string
         """
+        print(user)
         try:
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=60),
@@ -54,6 +55,7 @@ class Authenticate:
             return jwt.encode(payload, current_app.config.get('SECRET_KEY'),
                               algorithm='HS256')
         except Exception as ex:
+            print(ex)
             return ex
 
     @staticmethod
