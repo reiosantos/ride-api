@@ -240,7 +240,7 @@ CREATE UNIQUE INDEX users_user_id_uindex ON tests.users USING btree (user_id);
 --
 
 ALTER TABLE ONLY tests.requests
-    ADD CONSTRAINT requests_rides_ride_id_fk FOREIGN KEY (ride_id_fk) REFERENCES production.rides(ride_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT requests_rides_ride_id_fk FOREIGN KEY (ride_id_fk) REFERENCES tests.rides (ride_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -248,7 +248,7 @@ ALTER TABLE ONLY tests.requests
 --
 
 ALTER TABLE ONLY tests.requests
-    ADD CONSTRAINT requests_users_user_id_fk FOREIGN KEY (passenger_id) REFERENCES production.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT requests_users_user_id_fk FOREIGN KEY (passenger_id) REFERENCES tests.users (user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -256,7 +256,7 @@ ALTER TABLE ONLY tests.requests
 --
 
 ALTER TABLE ONLY tests.rides
-    ADD CONSTRAINT rides_users_user_id_fk FOREIGN KEY (driver_id) REFERENCES production.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT rides_users_user_id_fk FOREIGN KEY (driver_id) REFERENCES tests.users (user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
