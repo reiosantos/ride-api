@@ -222,7 +222,11 @@ class DatabaseConnection:
             SET check_function_bodies = false;
             SET client_min_messages = warning;
             SET row_security = off;
-            
+      
+            CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+            COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
             CREATE SCHEMA tests;
             ALTER SCHEMA tests OWNER TO postgres;
             SET default_tablespace = '';
