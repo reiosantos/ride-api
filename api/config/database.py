@@ -226,6 +226,8 @@ class DatabaseConnection:
             CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
             COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+            
+            CREATE OR REPLACE LANGUAGE plpgsql;
 
             CREATE SCHEMA tests;
             ALTER SCHEMA tests OWNER TO postgres;
