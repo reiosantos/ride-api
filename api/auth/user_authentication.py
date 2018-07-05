@@ -44,7 +44,6 @@ class Authenticate:
         Generates the Auth Token
         :return: string
         """
-        print(user)
         try:
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=60),
