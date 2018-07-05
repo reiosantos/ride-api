@@ -37,7 +37,6 @@ class Authenticate:
             user = Users.find_user_by_id(user_id)
             if user:
                 return user
-        return Users.find_user_by_id(0)
 
     @staticmethod
     def encode_auth_token(user: Users.UserModel):
