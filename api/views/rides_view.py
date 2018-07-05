@@ -98,6 +98,7 @@ class RidesController(MethodView):
             return jsonify({"success_message": "successfully added a"
                                                " new ride.",
                             "access_token": auth_token,
+                            "ride_id": ride.ride_id,
                             "data": True}), 201
 
         return ReturnErrors.error_occurred(auth_token)
