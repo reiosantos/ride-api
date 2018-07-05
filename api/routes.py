@@ -1,11 +1,11 @@
 """
 Urls class , to handel request urls,
 """
-from api.controllers.login_controller import LoginController
-from api.controllers.logout_controller import LogoutController
-from api.controllers.register_controller import RegisterController
-from api.controllers.ride_requests_controller import RideRequestController
-from api.controllers.rides_controller import RidesController
+from api.views.login_view import LoginController
+from api.views.logout_view import LogoutController
+from api.views.register_view import RegisterController
+from api.views.requests_view import RideRequestController
+from api.views.rides_view import RidesController
 
 
 class Urls:
