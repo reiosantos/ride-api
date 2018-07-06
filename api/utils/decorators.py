@@ -4,7 +4,7 @@ from functools import wraps
 
 from flask import request
 
-from api.errors.return_errors import ReturnErrors
+from api.errors.return_errors import ReturnError
 
 
 class Decorate:
@@ -24,7 +24,7 @@ class Decorate:
             """
 
             if not request or not request.json:
-                return ReturnErrors.not_json_request()
+                return ReturnError.not_json_request()
 
             return fun(*args, **kwargs)
 
