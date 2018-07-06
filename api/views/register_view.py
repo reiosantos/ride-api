@@ -4,7 +4,7 @@ from flask import request, jsonify
 from flask.views import MethodView
 
 from api.auth.user_authentication import Authenticate
-from api.errors.return_errors import ReturnErrors
+from api.errors.return_errors import ReturnError
 from api.models.users_model import Users
 from api.utils.decorators import Decorate
 from api.utils.validators import Validators
@@ -22,7 +22,7 @@ class RegisterController(MethodView):
 
         keys = ("full_name", "contact", "username", "password", "user_type")
         if not set(keys).issubset(set(post_data)):
-            return ReturnErrors.missing_fields(keys)
+            return ReturnError.missing_fields(keys)
 
         contact = post_data.get('contact')
         full_name = post_data.get('full_name')
@@ -32,13 +32,13 @@ class RegisterController(MethodView):
 
         if not request.json["full_name"] or not request.json["username"] \
                 or not request.json["user_type"]:
-            return ReturnErrors.empty_fields()
+            return ReturnError.empty_fields()
 
         if not Validators.validate_contact(contact):
-            return ReturnErrors.invalid_contact()
+            return ReturnError.invalid_contact()
 
         if not Validators.validate_password(password, 6):
-            return ReturnErrors.invalid_password()
+            return ReturnError.invalid_password()
 
         # check if user already exists
         user = Users.find_user_by_contact(contact=contact)
@@ -54,7 +54,7 @@ class RegisterController(MethodView):
                 del user.password
                 auth_token = Authenticate.encode_auth_token(user)
                 if isinstance(auth_token, Exception):
-                    return ReturnErrors.error_occurred()
+                    return ReturnError.error_occurred()
 
                 response_object = {
                     'data': False,
@@ -65,6 +65,6 @@ class RegisterController(MethodView):
 
             except Exception as ex:
                 print(ex)
-                return ReturnErrors.error_occurred()
+                return ReturnError.error_occurred()
         else:
-            return ReturnErrors.user_already_exists()
+            return ReturnError.user_already_exists()
