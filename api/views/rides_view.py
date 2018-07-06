@@ -10,8 +10,7 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_identity
 
-from api.auth.user_authentication import Authenticate
-from api.errors.return_errors import ReturnErrors
+from api.errors.return_errors import ReturnError
 from api.models.rides_model import Rides
 from api.utils.decorators import Decorate
 from api.utils.validators import Validators
@@ -33,7 +32,6 @@ class RidesController(MethodView):
         user = current_identity
         if hasattr(user, "password"):
             del user.password
-        auth_token = Authenticate.encode_auth_token(user)
 
         if user:
             if ride_id:
@@ -41,15 +39,22 @@ class RidesController(MethodView):
                     ride = Rides.find_one_ride(ride_id=ride_id, driver_id=user.user_id)
                 else:
                     ride = Rides.find_one_ride(ride_id=ride_id, driver_id=None)
+
                 if ride:
-                    return jsonify({"error_message": False, "access_token": auth_token,
+                    return jsonify({"error_message": False,
                                     "data": ride.__dict__})
-                return ReturnErrors.ride_not_found(ride_id, auth_token)
+                return ReturnError.ride_not_found(ride_id)
 
-            return jsonify({"error_message": False, "access_token": auth_token,
-                            "data": [o.__dict__ for o in Rides.find_all_rides()]})
+            rides = Rides.find_all_rides()
+            if isinstance(rides, list) and len(rides) > 0:
+                return jsonify({"error_message": False,
+                                "data": [o.__dict__ for o in rides]})
+            if isinstance(rides, Rides.RideModel):
+                rides = [rides.__dict__]
 
-        return ReturnErrors.user_not_found(auth_token)
+            return jsonify({"error_message": False, "data": rides})
+
+        return ReturnError.user_not_found()
 
     @Decorate.receive_json
     @jwt_required()
@@ -75,18 +80,17 @@ class RidesController(MethodView):
         user = current_identity
         if hasattr(user, "password"):
             del user.password
-        auth_token = Authenticate.encode_auth_token(user)
 
         keys = ("destination", "trip_from", "cost", "depart_time")
         if not set(keys).issubset(set(request.json)):
-            return ReturnErrors.missing_fields(keys, auth_token)
+            return ReturnError.missing_fields(keys)
 
         if not Validators.validate_number(str(request.json['cost'])):
-            return ReturnErrors.invalid_amount(auth_token)
+            return ReturnError.invalid_amount()
 
         if not request.json["destination"] or not request.json["depart_time"] \
                 or not request.json["trip_from"]:
-            return ReturnErrors.empty_fields(auth_token)
+            return ReturnError.empty_fields()
 
         ride = Rides.create_ride(driver_id=user.user_id,
                                  destination=request.json['destination'],
@@ -97,11 +101,10 @@ class RidesController(MethodView):
         if ride:
             return jsonify({"success_message": "successfully added a"
                                                " new ride.",
-                            "access_token": auth_token,
                             "ride_id": ride.ride_id,
                             "data": True}), 201
 
-        return ReturnErrors.error_occurred(auth_token)
+        return ReturnError.error_occurred()
 
     @Decorate.receive_json
     @jwt_required()
@@ -118,12 +121,11 @@ class RidesController(MethodView):
         user = current_identity
         if hasattr(user, "password"):
             del user.password
-        auth_token = Authenticate.encode_auth_token(user)
 
         ride_id = request.json["ride_id"]
         ride = Rides.find_one_ride(ride_id, user.user_id)
         if not ride:
-            return ReturnErrors.ride_not_found(ride_id, auth_token)
+            return ReturnError.ride_not_found(ride_id)
 
         update = Rides.update_ride(ride_id, user.user_id, request.json["cost"],
                                    request.json["trip_from"],
@@ -131,10 +133,9 @@ class RidesController(MethodView):
                                    request.json["depart_time"])
         if update:
             return jsonify({"success_message": "Update has been successful.",
-                            "access_token": auth_token,
                             "data": True})
 
-        return ReturnErrors.could_not_process_request(auth_token)
+        return ReturnError.could_not_process_request()
 
     def __validate_update_request(self):
         """
@@ -148,15 +149,14 @@ class RidesController(MethodView):
         user = current_identity
         if hasattr(user, "password"):
             del user.password
-        auth_token = Authenticate.encode_auth_token(user)
 
         keys = ("ride_id", "destination", "trip_from", "cost", "depart_time")
         if not set(keys).issubset(set(request.json)):
-            return ReturnErrors.missing_fields(keys, auth_token)
+            return ReturnError.missing_fields(keys)
 
         if not request.json["ride_id"] or not request.json["destination"] or \
                 not request.json["trip_from"] or not request.json["depart_time"]:
-            return ReturnErrors.empty_fields(auth_token)
+            return ReturnError.empty_fields()
 
         return True
 
@@ -164,15 +164,14 @@ class RidesController(MethodView):
     def __is_driver():
         user = current_identity
         if not user:
-            return ReturnErrors.user_not_found()
+            return ReturnError.user_not_found()
 
         user = current_identity
         if hasattr(user, "password"):
             del user.password
-        auth_token = Authenticate.encode_auth_token(user)
 
         if not user.user_type == "driver":
-            return ReturnErrors.not_allowed_to_perform_this_action(auth_token)
+            return ReturnError.not_allowed_to_perform_this_action()
 
         return True
 
@@ -189,19 +188,16 @@ class RidesController(MethodView):
         user = current_identity
         if hasattr(user, "password"):
             del user.password
-        auth_token = Authenticate.encode_auth_token(user)
 
         ride = Rides.find_one_ride(ride_id)
         if not ride:
-            return ReturnErrors.ride_not_found(ride_id, auth_token)
+            return ReturnError.ride_not_found(ride_id)
 
         if Rides.delete_ride(ride_id):
             return jsonify({"success_message": "Ride {0} has been "
                                                "deleted.".format(ride_id),
-                            "access_token": auth_token,
                             "data": True})
 
         return jsonify({"error_message": "Ride {0} has not been "
                                          "deleted.".format(ride_id),
-                        "access_token": auth_token,
                         "data": False})
