@@ -1,6 +1,6 @@
 from flask import jsonify, request
 
-from api.errors.request_errors import RequestErrors
+from api.errors.request_errors import RequestError
 
 
 class ReturnError:
@@ -61,7 +61,7 @@ class ReturnError:
 
     @staticmethod
     def not_json_request():
-        return RequestErrors.bad_request("Not a json request")
+        return RequestError.bad_request("Not a json request")
 
     @staticmethod
     def could_not_process_request():
