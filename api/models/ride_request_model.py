@@ -174,6 +174,10 @@ class RideRequests:
                                      status=Rides.RideStatus.taken, driver_id=driver_id):
                 return False
 
+            data['taken'] = True
+        else:
+            data['taken'] = False
+
         return cls.__database.update(cls.__table, selection, data)
 
     @classmethod
