@@ -45,11 +45,15 @@ class DatabaseConnection:
         """
         if app.config['TESTING']:
             cls.schema = DatabaseConfig.SCHEMA_TESTING
+            cls.__conn.autocommit = True
         else:
             cls.schema = DatabaseConfig.SCHEMA_PRODUCTION
 
-        if not cls.__conn:
-            cls.__conn = cls.DbConnection(cls.schema).conn
+        try:
+            if not cls.__conn:
+                cls.__conn = cls.DbConnection(cls.schema).conn
+        except pg.DatabaseError as ex:
+            print("Error: " + str(ex))
 
     @classmethod
     def connect(cls):
@@ -185,7 +189,7 @@ class DatabaseConnection:
             query = f"""SELECT * FROM {cls.schema}.{name_of_table}"""
         else:
             query = f"""
-            SELECT a.request_date, a.request_id, a.status, a.taken, 
+            SELECT a.request_date, a.request_id, a.status,
             b.status as ride_status, b.driver_id, b.ride_id, b.departure_time, 
             b.destination, b.post_date, b.trip_cost, b.trip_from, c.user_id, c.contact, 
             c.full_names FROM production.requests a LEFT JOIN production.rides b ON 
@@ -213,157 +217,6 @@ class DatabaseConnection:
         """
         cur = cls.__conn.cursor()
         # cur.execute(open("../../database_tests.sql", "r").read())
-        cur.execute(
-            """     
-            SET statement_timeout = 0;
-            SET lock_timeout = 0;
-            SET idle_in_transaction_session_timeout = 0;
-            SET client_encoding = 'UTF8';
-            SET standard_conforming_strings = ON;
-            SELECT pg_catalog.set_config('search_path', '', FALSE);
-            SET check_function_bodies = FALSE;
-            SET client_min_messages = WARNING;
-            SET row_security = OFF;
-            
-            CREATE DATABASE "ride-api" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
-                        
-            ALTER DATABASE "ride-api"
-            OWNER TO postgres;
-       
-            SET statement_timeout = 0;
-            SET lock_timeout = 0;
-            SET idle_in_transaction_session_timeout = 0;
-            SET client_encoding = 'UTF8';
-            SET standard_conforming_strings = on;
-            SELECT pg_catalog.set_config('search_path', '', false);
-            SET check_function_bodies = false;
-            SET client_min_messages = warning;
-            SET row_security = off;
-            
-            CREATE SCHEMA tests;
-            ALTER SCHEMA tests OWNER TO postgres;
-            SET default_tablespace = '';
-            SET default_with_oids = false;
-
-            CREATE TABLE tests.requests (
-                id integer NOT NULL,
-                request_id character varying(45),
-                ride_id_fk character varying(255),
-                request_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-                passenger_id character varying(45),
-                taken boolean,
-                status character varying(45)
-            );
-
-            ALTER TABLE tests.requests OWNER TO postgres;
-
-            CREATE SEQUENCE tests.requests_id_seq
-                AS integer
-                START WITH 1
-                INCREMENT BY 1
-                NO MINVALUE
-                NO MAXVALUE
-                CACHE 1;
-
-            ALTER TABLE tests.requests_id_seq OWNER TO postgres;
-
-            ALTER SEQUENCE tests.requests_id_seq OWNED BY tests.requests.id;
-
-            CREATE TABLE tests.rides (
-                id integer NOT NULL,
-                ride_id character varying(45),
-                post_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-                destination character varying(255),
-                departure_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-                trip_from character varying(255),
-                trip_cost double precision,
-                status character varying(255),
-                driver_id character varying(45)
-            );
-
-
-            ALTER TABLE tests.rides OWNER TO postgres;
-
-            CREATE SEQUENCE tests.table_name_id_seq
-                AS integer
-                START WITH 1
-                INCREMENT BY 1
-                NO MINVALUE
-                NO MAXVALUE
-                CACHE 1;
-            
-            ALTER TABLE tests.table_name_id_seq OWNER TO postgres;
-
-            ALTER SEQUENCE tests.table_name_id_seq OWNED BY tests.rides.id;
-
-            CREATE TABLE tests.users (
-                id integer NOT NULL,
-                user_id character varying(45),
-                full_names character varying(255),
-                username character varying(255),
-                contact character varying(255),
-                registration_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-                user_type character varying(45),
-                password character varying(255)
-            );
-            
-            
-            ALTER TABLE tests.users OWNER TO postgres;
-
-            CREATE SEQUENCE tests.users_id_seq
-                AS integer
-                START WITH 1
-                INCREMENT BY 1
-                NO MINVALUE
-                NO MAXVALUE
-                CACHE 1;
-            
-            
-            ALTER TABLE tests.users_id_seq OWNER TO postgres;
-
-            ALTER SEQUENCE tests.users_id_seq OWNED BY tests.users.id;
-
-            ALTER TABLE ONLY tests.requests ALTER COLUMN id SET DEFAULT nextval('tests.requests_id_seq'::regclass);
-
-            ALTER TABLE ONLY tests.rides ALTER COLUMN id SET DEFAULT nextval('tests.table_name_id_seq'::regclass);
-
-            ALTER TABLE ONLY tests.users ALTER COLUMN id SET DEFAULT nextval('tests.users_id_seq'::regclass);
-
-            ALTER TABLE ONLY tests.requests
-                ADD CONSTRAINT requests_pkey PRIMARY KEY (id);
-
-            ALTER TABLE ONLY tests.rides
-                ADD CONSTRAINT table_name_pkey PRIMARY KEY (id);
-
-            ALTER TABLE ONLY tests.users
-                ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-            CREATE UNIQUE INDEX requests_id_uindex ON tests.requests USING btree (id);
-
-            CREATE UNIQUE INDEX requests_request_id_uindex ON tests.requests USING btree (request_id);
-
-            CREATE UNIQUE INDEX table_name_id_uindex ON tests.rides USING btree (id);
-
-            CREATE UNIQUE INDEX table_name_ride_id_uindex ON tests.rides USING btree (ride_id);
-
-            CREATE UNIQUE INDEX users_id_uindex ON tests.users USING btree (id);
-
-            CREATE UNIQUE INDEX users_user_id_uindex ON tests.users USING btree (user_id);
-
-            ALTER TABLE ONLY tests.requests
-                ADD CONSTRAINT requests_rides_ride_id_fk FOREIGN KEY (ride_id_fk) REFERENCES 
-                production.rides(ride_id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-            ALTER TABLE ONLY tests.requests
-                ADD CONSTRAINT requests_users_user_id_fk FOREIGN KEY (passenger_id) REFERENCES 
-                production.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-            ALTER TABLE ONLY tests.rides
-                ADD CONSTRAINT rides_users_user_id_fk FOREIGN KEY (driver_id) REFERENCES 
-                production.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
-            """
-        )
-        cls.__conn.commit()
 
     @classmethod
     def drop_test_schema(cls):
@@ -372,5 +225,7 @@ class DatabaseConnection:
         :return:
         """
         cur = cls.__conn.cursor()
-        cur.execute("""DROP SCHEMA IF EXISTS tests CASCADE""")
+        cur.execute("""DELETE FROM tests.requests""")
+        cur.execute("""DELETE FROM tests.rides""")
+        cur.execute("""DELETE FROM tests.users""")
         cls.__conn.commit()
