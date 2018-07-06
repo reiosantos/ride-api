@@ -6,7 +6,7 @@ Noteworthy: None is the `nil' object;.
 from flask import jsonify, request
 
 
-class RequestErrors:
+class RequestError:
     """
     Class ErrorHandler to handle request errors and request codes
     """
@@ -22,7 +22,7 @@ class RequestErrors:
         :param error:
         :return:
         """
-        return jsonify({"error_message": RequestErrors.message['error_message'].format(
+        return jsonify({"error_message": RequestError.message['error_message'].format(
             error, request.url)}), 404
 
     @staticmethod
@@ -33,7 +33,7 @@ class RequestErrors:
         :param error:
         :return:
         """
-        return jsonify({"error_message": RequestErrors.message['error_message'].format(
+        return jsonify({"error_message": RequestError.message['error_message'].format(
             error, request.url)}), 400
 
     @staticmethod
@@ -44,7 +44,7 @@ class RequestErrors:
         :param error:
         :return:
         """
-        return jsonify({"error_message": RequestErrors.message['error_message'].format(
+        return jsonify({"error_message": RequestError.message['error_message'].format(
             error, request.method)}), 405
 
     @staticmethod
@@ -55,7 +55,7 @@ class RequestErrors:
         :param error:
         :return:
         """
-        return jsonify({"error_message": RequestErrors.message['error_message'].format(
+        return jsonify({"error_message": RequestError.message['error_message'].format(
             error, request.method)}), 500
 
     @staticmethod
@@ -66,5 +66,5 @@ class RequestErrors:
         :param error:
         :return:
         """
-        return jsonify({"error_message": RequestErrors.message['error_message'].format(
+        return jsonify({"error_message": RequestError.message['error_message'].format(
             error, request.method)}), 401
