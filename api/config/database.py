@@ -57,6 +57,10 @@ class DatabaseConnection:
 
     @classmethod
     def connect(cls):
+        """
+        :returns the class after creating a connection to DB
+        :return:
+        """
         return cls
 
     @classmethod
@@ -215,7 +219,7 @@ class DatabaseConnection:
         create test schema
         :return:
         """
-        cur = cls.__conn.cursor()
+        # cur = cls.__conn.cursor()
         # cur.execute(open("../../database_tests.sql", "r").read())
 
     @classmethod
