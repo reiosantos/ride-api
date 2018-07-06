@@ -13,7 +13,6 @@ class TestRegistration(unittest.TestCase):
         self.client = APP.test_client
         DatabaseConnection.init_db(APP)
         self.database = DatabaseConnection.connect()
-        self.database.create_test_schema()
         self.token = None
 
     def tearDown(self):
@@ -97,7 +96,7 @@ class TestRegistration(unittest.TestCase):
             password="test123"
         )), content_type="application/json")
         data = json.loads(res.data.decode("utf-8"))
-        self.assertEqual(res.status_code, 201)
+        self.assertIn(res.status_code, (201, 202))
         self.assertNotIn("error_message", data)
         self.assertIn("success_message", data)
         self.assertEqual(data['success_message'], 'Successfully registered.')
