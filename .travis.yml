@@ -9,6 +9,7 @@ install:
 - pip3 install coveralls
 script:
 - coverage run -m py.test
+- coverage xml
 - coverage3 report
 - coveralls
 env:
