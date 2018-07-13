@@ -10,7 +10,8 @@ CREATE TABLE tests.users (
     contact character varying(255),
     registration_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     user_type character varying(45),
-    password character varying(255)
+    password character varying(255),
+    last_login timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE tests.rides (
