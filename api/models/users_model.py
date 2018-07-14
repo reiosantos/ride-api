@@ -122,7 +122,7 @@ class Users:
             user.user_id = res['user_id']
             user.password = res['password'].encode("utf8")
             return user
-        return None
+        return cls.find_user_by_contact(username)
 
     @classmethod
     def get_all_users(cls) -> List[UserModel] or None:
