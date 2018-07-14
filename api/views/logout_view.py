@@ -38,7 +38,7 @@ class LogoutController(MethodView):
                         'status': 'fail',
                         'message': ex
                     }
-                    return jsonify(response_object), 200
+                    return jsonify(response_object), 401
             else:
                 response_object = {
                     'status': 'fail',
