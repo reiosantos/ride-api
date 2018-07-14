@@ -58,7 +58,7 @@ class RegisterController(MethodView):
 
                 response_object = {
                     'data': False,
-                    'success_message': 'Successfully registered.',
+                    'success_message': 'Successfully registered. You can now login.',
                 }
                 return jsonify(response_object), 201
 
