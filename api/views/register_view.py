@@ -65,5 +65,9 @@ class RegisterController(MethodView):
             except Exception as ex:
                 print(ex)
                 return ReturnError.error_occurred()
+        elif user:
+            return ReturnError.contact_already_exists()
+        elif user_name:
+            return ReturnError.username_already_exists()
         else:
-            return ReturnError.user_already_exists()
+            return ReturnError.could_not_process_request()
