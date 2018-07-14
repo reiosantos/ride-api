@@ -44,6 +44,7 @@ class LoginController(MethodView):
                 if auth_token:
                     response_object = {
                         'data': False,
+                        'user': user.__dict__,
                         'success_message': 'Successfully logged in.',
                         'auth_token': auth_token.decode()
                     }
