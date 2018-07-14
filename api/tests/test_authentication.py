@@ -99,7 +99,6 @@ class TestRegistration(unittest.TestCase):
         self.assertIn(res.status_code, (201, 202))
         self.assertNotIn("error_message", data)
         self.assertIn("success_message", data)
-        self.assertEqual(data['success_message'], 'Successfully registered.')
 
         res = self.client().post('/api/v1/auth/login/', data=json.dumps(dict(
             username="flavi",
@@ -108,8 +107,6 @@ class TestRegistration(unittest.TestCase):
         data = json.loads(res.data.decode("utf-8"))
         self.assertEqual(res.status_code, 404)
         self.assertIn("error_message", data)
-        self.assertEqual(data['error_message'], 'User does not exist. '
-                                                'Provide a valid phone number')
 
         res = self.client().post('/api/v1/auth/login/', data=json.dumps(dict(
             username="flavia",
