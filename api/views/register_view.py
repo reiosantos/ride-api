@@ -59,7 +59,6 @@ class RegisterController(MethodView):
                 response_object = {
                     'data': False,
                     'success_message': 'Successfully registered.',
-                    'auth_token': auth_token.decode()
                 }
                 return jsonify(response_object), 201
 
