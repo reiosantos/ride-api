@@ -93,6 +93,22 @@ class ReturnError:
         return jsonify(response_object), 202
 
     @staticmethod
+    def username_already_exists():
+        response_object = {
+            'data': False,
+            'error_message': 'Username already taken.',
+        }
+        return jsonify(response_object), 202
+
+    @staticmethod
+    def contact_already_exists():
+        response_object = {
+            'data': False,
+            'error_message': 'Phone number already taken.',
+        }
+        return jsonify(response_object), 202
+
+    @staticmethod
     def invalid_credentials():
         response_object = {
             'data': False,
