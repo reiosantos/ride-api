@@ -72,7 +72,7 @@ class ReturnError:
     def user_not_found():
         response_object = {
             'data': False,
-            'error_message': 'User does not exist. Provide a valid phone number',
+            'error_message': 'User does not exist. Provide a valid username or phone number',
         }
         return jsonify(response_object), 404
 
