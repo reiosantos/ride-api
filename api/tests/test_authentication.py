@@ -129,6 +129,12 @@ class TestRegistration(unittest.TestCase):
 
         self.token = data['auth_token']
 
+        # invalid token logout
+        response = self.client().post(
+            'api/v1/auth/logout',
+        )
+        self.assertEqual(response.status_code, 403)
+
         # valid token logout
         response = self.client().post(
             'api/v1/auth/logout',
@@ -136,10 +142,11 @@ class TestRegistration(unittest.TestCase):
                 Authorization='Bearer ' + self.token
             )
         )
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data.decode())
         self.assertTrue(data['status'] == 'success')
         self.assertTrue(data['message'] == 'Successfully logged out.')
-        self.assertEqual(response.status_code, 200)
+
 
 
 if __name__ == '__main__':

@@ -52,6 +52,14 @@ class TestClass(TestCase):
         """
         Test case for get rides endpoint, it gets all rides
         """
+        res = self.client().get('/api/v1/ride/', headers=self.headers)
+        self.assertEqual(res.status_code, 404)
+
+        res = self.client().get('/api/v1/rides/', headers={
+            'Authorization': "JWT {}e".format(self.token)
+        })
+        self.assertEqual(res.status_code, 401)
+
         res = self.client().get('/api/v1/rides/', headers=self.headers)
 
         self.assertEqual(res.status_code, 200)
@@ -112,8 +120,6 @@ class TestClass(TestCase):
         self.assertEqual(res.status_code, 201)
         self.assertIn("data", res.json)
         self.assertIn("success_message", res.json)
-        self.assertTrue(res.json['data'])
-        self.assertEqual(res.json['success_message'], "successfully added a new ride.")
 
         res = self.client().post('/api/v1/rides/',
                                  data=json.dumps(dict(
@@ -127,7 +133,6 @@ class TestClass(TestCase):
         self.assertEqual(res.status_code, 201)
         self.assertIn("data", res.json)
         self.assertIn("success_message", res.json)
-        self.assertEqual(res.json['success_message'], "successfully added a new ride.")
 
         res = self.client().get('/api/v1/rides/', headers=self.headers)
 
@@ -136,8 +141,57 @@ class TestClass(TestCase):
         self.assertIsInstance(res.json['data'], list)
         self.assertTrue(len(res.json['data']) > 0)
 
-        ride = res.json['data'][0]
-        ride_id = ride['ride_id']
+        ride0 = res.json['data'][0]
+        ride_id0 = ride0['ride_id']
+
+        res = self.client().put(f'/api/v1/rides/',
+                                data=json.dumps(dict(
+                                    ride_id=ride_id0,
+                                    destination="kampala",
+                                    trip_from="Jinja",
+                                    depart_time="2018-12-21",
+                                    cost=3000
+                                )),
+                                headers=self.headers,
+                                content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("data", res.json)
+        self.assertIn("success_message", res.json)
+
+        res = self.client().put(f'/api/v1/rides/',
+                                data=json.dumps(dict(
+                                    ride_id=ride_id0,
+                                    trip_from="Jinja",
+                                    depart_time="2018-12-21",
+                                    cost=3000
+                                )),
+                                headers=self.headers,
+                                content_type="application/json")
+        self.assertEqual(res.status_code, 400)
+
+        res = self.client().put(f'/api/v1/rides/',
+                                data=json.dumps(dict(
+                                    ride_id=ride_id0,
+                                    destination="",
+                                    trip_from="Jinja",
+                                    depart_time="2018-12-21",
+                                    cost=3000
+                                )),
+                                headers=self.headers,
+                                content_type="application/json")
+        self.assertEqual(res.status_code, 400)
+
+        res = self.client().delete(f'/api/v1/rides/0{ride_id0}',
+                                   headers=self.headers,
+                                   content_type="application/json")
+        self.assertEqual(res.status_code, 404)
+
+        res = self.client().delete(f'/api/v1/rides/{ride_id0}',
+                                   headers=self.headers,
+                                   content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("data", res.json)
+        self.assertIn("success_message", res.json)
 
         res = self.client().post(f'/api/v1/rides/1/requests/',
                                  headers=self.headers,
@@ -148,15 +202,74 @@ class TestClass(TestCase):
         self.assertFalse(res.json['data'])
         self.assertEqual(res.json['error_message'], 'The requested ride 1 is not found')
 
+        res = self.client().get('/api/v1/rides/', headers=self.headers)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("data", res.json)
+        self.assertIsInstance(res.json['data'], list)
+        self.assertTrue(len(res.json['data']) > 0)
+
+        ride = res.json['data'][0]
+        ride_id = ride['ride_id']
+
         res = self.client().post(f'/api/v1/rides/{ride_id}/requests/',
                                  headers=self.headers,
                                  content_type='application/json')
         self.assertEqual(res.status_code, 201)
+
+        res = self.client().post(f'/api/v1/rides/{ride_id}/requests/',
+                                 headers=self.headers,
+                                 content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+
+        res = self.client().get(f'/api/v1/rides/{ride_id}/requests/',
+                                headers=self.headers,
+                                content_type='application/json')
+        self.assertEqual(res.status_code, 200)
         self.assertIn("data", res.json)
-        self.assertNotIn("error_message", res.json)
-        self.assertIn("success_message", res.json)
-        self.assertTrue(res.json['data'])
-        self.assertTrue(res.json['success_message'])
+        requ = res.json['data'][0]
+        requ_id = requ['request_id']
+
+        res = self.client().put(f'/api/v1/rides/{ride_id}/requests/0{requ_id}',
+                                data=json.dumps(dict(
+                                    status="accept",
+                                )),
+                                headers=self.headers,
+                                content_type='application/json')
+        self.assertEqual(res.status_code, 404)
+
+        res = self.client().put(f'/api/v1/rides/{ride_id}/requests/{requ_id}',
+                                data=json.dumps(dict(
+                                    status="accept",
+                                )),
+                                headers=self.headers,
+                                content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+
+        res = self.client().put(f'/api/v1/rides/{ride_id}/requests/{requ_id}',
+                                data=json.dumps(dict(
+                                    status="accepted",
+                                )),
+                                headers=self.headers,
+                                content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client().put(f'/api/v1/rides/{ride_id}/requests/{requ_id}',
+                                data=json.dumps(dict(
+                                    status="rejected",
+                                )),
+                                headers=self.headers,
+                                content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client().delete(f'/api/v1/rides/{ride_id}/requests/{requ_id}',
+                                headers=self.headers,
+                                content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client().get(f'/api/v1/rides/0{ride_id}/requests/',
+                                   headers=self.headers,
+                                   content_type='application/json')
+        self.assertEqual(res.status_code, 404)
 
     def test_update_ride(self):
         """
@@ -193,54 +306,11 @@ class TestClass(TestCase):
         self.assertIn("data", res.json)
         self.assertNotIn("error_message", res.json)
         self.assertIn("success_message", res.json)
-        self.assertTrue(res.json['data'])
-        self.assertTrue(res.json['success_message'])
 
-        """
-        res = self.client().put('/api/v1/rides/update/', data=json.dumps(
-            dict(trip_to="kabumbi", cost="4000")))
-        self.assertEqual(res.status_code, 400)
-
-        res = self.client().put('/api/v1/rides/update/', data=json.dumps(
-            dict(trip_to="kabumbi", cost="4000")), content_type='application/json')
-        self.assertEqual(res.status_code, 400)
-        self.assertIn("data", res.json)
-        self.assertIn("error_message", res.json)
-        self.assertIsInstance(res.json['data'], list)
-        self.assertEqual(res.json['error_message'], "some of these fields are missing")
-
-        res = self.client().put('/api/v1/rides/update/', data=json.dumps(
-            dict(trip_to="kitunda", cost="4000", status="available", taken_by=None)),
-                                content_type='application/json')
-        self.assertEqual(res.status_code, 400)
-
-        res = self.client().put('/api/v1/rides/update/', data=json.dumps(
-            dict(trip_to="kitunda", cost="4000", ride_id=8, status="available", taken_by=None)),
-                                content_type='application/json')
-        self.assertEqual(res.status_code, 404)
-        self.assertIn("data", res.json)
-        self.assertFalse(res.json['data'])
-        self.assertIn("error_message", res.json)
-
-        res = self.client().put('/api/v1/rides/update/', data=json.dumps(
-            dict(trip_to="kitunda", cost="4000", ride_id=None, status="available", taken_by=None)),
-                                content_type='application/json')
-        self.assertEqual(res.status_code, 400)
-        self.assertIn("data", res.json)
-        self.assertIn("error_message", res.json)
-        self.assertIsInstance(res.json['data'], dict)
-        self.assertEqual(res.json['error_message'], "some of these fields have empty/no values")
-
-        res = self.client().put('/api/v1/rides/update/', data=json.dumps(
-            dict(trip_to="kitunda", cost="4000", ride_id=2, status="available", taken_by=None)),
+        res = self.client().get(f'/api/v1/rides/{ride_id}/requests/',
+                                headers=self.headers,
                                 content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        self.assertIn("data", res.json)
-        self.assertNotIn("error_message", res.json)
-        self.assertIn("success_message", res.json)
-        self.assertTrue(res.json['data'])
-        self.assertTrue(res.json['success_message'])
-        """
 
 
 if __name__ == "__main__":
