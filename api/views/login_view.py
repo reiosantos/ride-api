@@ -41,7 +41,9 @@ class LoginController(MethodView):
                 user = copy.deepcopy(user)
                 del user.password
                 auth_token = Authenticate.encode_auth_token(user)
+
                 if auth_token:
+                    self.__users.update_last_login(user.username, user.contact)
                     response_object = {
                         'data': False,
                         'user': user.__dict__,

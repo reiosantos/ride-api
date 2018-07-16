@@ -3,6 +3,7 @@
 from api.config.database import DatabaseConnection
 from api.models.objects.user import UserModel
 from api.utils.singleton import Singleton
+from api.utils.utils import Utils
 
 
 class Users(metaclass=Singleton):
@@ -94,3 +95,18 @@ class Users(metaclass=Singleton):
             user.password = res['password'].encode("utf8")
             return user
         return self.find_user_by_contact(username)
+
+    def update_last_login(self, username, contact):
+        """
+        update user last login date
+        :param username:
+        :return:
+        """
+        criteria = {
+            "username": username,
+            "contact": contact
+        }
+        data = {
+            "last_login": Utils.make_date_time(),
+        }
+        self.__database.update(self.__table, criteria, data)
