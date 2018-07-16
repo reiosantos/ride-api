@@ -11,6 +11,7 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_identity
 
 from api.errors.return_errors import ReturnError
+from api.models.objects.request_status import RequestStatus
 from api.models.ride_request_model import RideRequests
 from api.models.rides_model import Rides
 from api.utils.decorators import Decorate
@@ -21,6 +22,9 @@ class RideRequestController(MethodView):
        class methods. For example, if you implement a ``get`` method, it will be
        used to handle ``GET`` requests. :
     """
+    __rides = Rides()
+    __ride_requests = RideRequests()
+    __request_status = RequestStatus()
 
     @jwt_required()
     def get(self, ride_id=None):
@@ -43,11 +47,11 @@ class RideRequestController(MethodView):
 
         if user:
             if ride_id:
-                ride = Rides.find_one_ride(ride_id)
+                ride = self.__rides.find_one_ride(ride_id)
                 if not ride:
                     return ReturnError.ride_not_found(ride_id)
 
-                req = RideRequests.find_all_detailed_requests(user.user_id, ride_id)
+                req = self.__ride_requests.find_all_detailed_requests(user.user_id, ride_id)
                 if req and (ride_id in req.keys()):
                     return jsonify({"error_message": False, "data": req[ride_id]})
 
@@ -55,7 +59,7 @@ class RideRequestController(MethodView):
 
             return jsonify({"error_message": False,
                             "data": [o.__dict__ for o in
-                                     RideRequests.find_all_detailed_requests(driver_id=user.user_id)]})
+                                     self.__ride_requests.find_all_detailed_requests(driver_id=user.user_id)]})
 
         return ReturnError.user_not_found()
 
@@ -65,10 +69,9 @@ class RideRequestController(MethodView):
         responds to post requests.
         :return:
         """
-        return RideRequestController.handle_request_ride(ride_id)
+        return self.handle_request_ride(ride_id)
 
-    @staticmethod
-    def handle_request_ride(ride_id):
+    def handle_request_ride(self, ride_id):
         """
         function break down to handle specifically requests to for response to
         ride offers from passengers offer offers
@@ -83,11 +86,11 @@ class RideRequestController(MethodView):
         if not current_identity:
             return ReturnError.user_not_found()
 
-        ride = Rides.find_one_ride(ride_id)
+        ride = self.__rides.find_one_ride(ride_id)
         if not ride:
             return ReturnError.ride_not_found(ride_id)
 
-        req = RideRequests.add_request_for_ride(ride_id, current_identity.user_id)
+        req = self.__ride_requests.add_request_for_ride(ride_id, current_identity.user_id)
         if req:
             return jsonify({"success_message": "Your request has been successful. The driver"
                                                " shall be responding to you shortly",
@@ -111,13 +114,13 @@ class RideRequestController(MethodView):
             del user.password
 
         status = request.json['status']
-        keys1 = (RideRequests.RequestStatus.accepted, RideRequests.RequestStatus.rejected,
-                 RideRequests.RequestStatus.pending)
+        keys1 = (self.__request_status.accepted, self.__request_status.rejected,
+                 self.__request_status.pending)
         if status not in set(keys1):
             return ReturnError.this_value_is_not_allowed("status", keys1)
 
-        update = RideRequests.update_request_status(status, request_id,
-                                                    current_identity.user_id)
+        update = self.__ride_requests.update_request_status(status, request_id,
+                                                            current_identity.user_id)
         if update:
             return jsonify({"success_message": "Update has been successful.",
                             "data": True})
@@ -138,15 +141,15 @@ class RideRequestController(MethodView):
         if hasattr(user, "password"):
             del user.password
 
-        ride = Rides.find_one_ride(ride_id)
+        ride = self.__rides.find_one_ride(ride_id)
         if not ride:
             return ReturnError.ride_not_found(ride_id)
 
-        req = RideRequests.find_one_brief_request(request_id)
+        req = self.__ride_requests.find_one_brief_request(request_id)
         if not req:
             return ReturnError.request_not_found(request_id)
 
-        if RideRequests.delete_request_for_ride(request_id):
+        if self.__ride_requests.delete_request_for_ride(request_id):
             return jsonify({"success_message": "Request for Ride {0} has been "
                                                "deleted.".format(ride_id),
                             "data": True})
@@ -184,11 +187,11 @@ class RideRequestController(MethodView):
         if not request.json["status"]:
             return ReturnError.empty_fields()
 
-        ride = Rides.find_one_ride(ride_id)
+        ride = self.__rides.find_one_ride(ride_id)
         if not ride:
             return ReturnError.ride_not_found(ride_id)
 
-        req = RideRequests.find_one_brief_request(request_id)
+        req = self.__ride_requests.find_one_brief_request(request_id)
         if not req:
             return ReturnError.request_not_found(request_id)
 

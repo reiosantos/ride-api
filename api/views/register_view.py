@@ -14,6 +14,7 @@ class RegisterController(MethodView):
     """
     User Registration Resource
     """
+    __users = Users()
 
     @Decorate.receive_json
     def post(self):
@@ -41,12 +42,12 @@ class RegisterController(MethodView):
             return ReturnError.invalid_password()
 
         # check if user already exists
-        user = Users.find_user_by_contact(contact=contact)
-        user_name = Users.find_user_by_username(username)
+        user = self.__users.find_user_by_contact(contact=contact)
+        user_name = self.__users.find_user_by_username(username)
         if not user and not user_name:
 
             try:
-                user = Users.create_user(full_name, contact, username,
+                user = self.__users.create_user(full_name, contact, username,
                                          Authenticate.hash_password(password), user_type)
 
                 # generate the auth token

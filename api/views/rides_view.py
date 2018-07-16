@@ -11,6 +11,9 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_identity
 
 from api.errors.return_errors import ReturnError
+from api.models.objects.request_status import RequestStatus
+from api.models.objects.ride import RideModel
+from api.models.ride_request_model import RideRequests
 from api.models.rides_model import Rides
 from api.utils.decorators import Decorate
 from api.utils.validators import Validators
@@ -21,6 +24,9 @@ class RidesController(MethodView):
        class methods. For example, if you implement a ``get`` method, it will be
        used to handle ``GET`` requests. :
     """
+    __rides = Rides()
+    __ride_requests = RideRequests()
+    __request_status = RequestStatus()
 
     @jwt_required()
     def get(self, ride_id=None):
@@ -36,20 +42,20 @@ class RidesController(MethodView):
         if user:
             if ride_id:
                 if user.user_type == "driver":
-                    ride = Rides.find_one_ride(ride_id=ride_id, driver_id=user.user_id)
+                    ride = self.__rides.find_one_ride(ride_id=ride_id, driver_id=user.user_id)
                 else:
-                    ride = Rides.find_one_ride(ride_id=ride_id, driver_id=None)
+                    ride = self.__rides.find_one_ride(ride_id=ride_id, driver_id=None)
 
                 if ride:
                     return jsonify({"error_message": False,
                                     "data": ride.__dict__})
                 return ReturnError.ride_not_found(ride_id)
 
-            rides = Rides.find_all_rides()
+            rides = self.__rides.find_all_rides()
             if isinstance(rides, list) and len(rides) > 0:
                 return jsonify({"error_message": False,
                                 "data": [o.__dict__ for o in rides]})
-            if isinstance(rides, Rides.RideModel):
+            if isinstance(rides, RideModel):
                 rides = [rides.__dict__]
 
             return jsonify({"error_message": False, "data": rides})
@@ -67,10 +73,9 @@ class RidesController(MethodView):
         if not isinstance(is_driver, bool):
             return is_driver
 
-        return RidesController.handel_post_new_ride()
+        return self.handel_post_new_ride()
 
-    @staticmethod
-    def handel_post_new_ride():
+    def handel_post_new_ride(self):
         """
         function break down to handle specifically requests to add new rode offers
         it breaks down from the main post function, but its still called from post
@@ -92,11 +97,11 @@ class RidesController(MethodView):
                 or not request.json["trip_from"]:
             return ReturnError.empty_fields()
 
-        ride = Rides.create_ride(driver_id=user.user_id,
-                                 destination=request.json['destination'],
-                                 trip_from=request.json['trip_from'],
-                                 cost=request.json['cost'],
-                                 depart_time=request.json["depart_time"])
+        ride = self.__rides.create_ride(driver_id=user.user_id,
+                                        destination=request.json['destination'],
+                                        trip_from=request.json['trip_from'],
+                                        cost=request.json['cost'],
+                                        depart_time=request.json["depart_time"])
 
         if ride:
             return jsonify({"success_message": "successfully added a"
@@ -189,11 +194,11 @@ class RidesController(MethodView):
         if hasattr(user, "password"):
             del user.password
 
-        ride = Rides.find_one_ride(ride_id)
+        ride = self.__rides.find_one_ride(ride_id)
         if not ride:
             return ReturnError.ride_not_found(ride_id)
 
-        if Rides.delete_ride(ride_id):
+        if self.__rides.delete_ride(ride_id):
             return jsonify({"success_message": "Ride {0} has been "
                                                "deleted.".format(ride_id),
                             "data": True})

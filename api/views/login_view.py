@@ -17,10 +17,10 @@ class LoginController(MethodView):
     """
     User Login Resource
     """
+    __users = Users()
 
-    @staticmethod
     @Decorate.receive_json
-    def post():
+    def post(self):
         """
         login user and create jwt token
         :return:
@@ -33,7 +33,7 @@ class LoginController(MethodView):
                 return ReturnError.missing_fields(keys)
 
             # fetch the user data
-            user = Users.find_user_by_username(username=post_data.get('username'))
+            user = self.__users.find_user_by_username(username=post_data.get('username'))
             if user:
                 if not Authenticate.verify_password(post_data.get('password'), user.password):
                     return ReturnError.invalid_credentials()

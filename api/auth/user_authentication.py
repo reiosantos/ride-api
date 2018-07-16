@@ -7,26 +7,30 @@ import bcrypt
 import jwt
 from flask import current_app
 
+from api.models.objects.user import UserModel
 from api.models.users_model import Users
+from api.utils.singleton import Singleton
 
 
-class Authenticate:
+class Authenticate(metaclass=Singleton):
     """Defines methods used by JWT token"""
 
-    @staticmethod
-    def authenticate_handler(username, password):
+    __users = Users()
+
+    @classmethod
+    def authenticate_handler(cls, username, password):
         """
         jwt method handler to verify user token
         :param username:
         :param password:
         :return:
         """
-        user = Users.find_user_by_contact(username)
+        user = cls.__users.find_user_by_contact(username)
         if user and Authenticate.verify_password(password, user.password):
             return user
 
-    @staticmethod
-    def identity_handler(payload) -> Users.UserModel:
+    @classmethod
+    def identity_handler(cls, payload) -> UserModel:
         """
         jwt method to retrieve user identity/ID
         :param payload:
@@ -34,12 +38,12 @@ class Authenticate:
         """
         if not isinstance(payload, str):
             user_id = payload['user_id']
-            user = Users.find_user_by_id(user_id)
+            user = cls.__users.find_user_by_id(user_id)
             if user:
                 return user
 
     @staticmethod
-    def encode_auth_token(user: Users.UserModel):
+    def encode_auth_token(user: UserModel):
         """
         Generates the Auth Token
         :return: string

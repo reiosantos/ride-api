@@ -36,7 +36,8 @@ class Server:
         Urls.generate(app)
         CORS(app)
         with app.app_context():
-            DatabaseConnection.init_db(app)
+            database = DatabaseConnection()
+            database.init_db(app)
         return app
 
 

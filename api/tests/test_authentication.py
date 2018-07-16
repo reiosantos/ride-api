@@ -11,8 +11,8 @@ class TestRegistration(unittest.TestCase):
     def setUp(self):
         APP.config['TESTING'] = True
         self.client = APP.test_client
-        DatabaseConnection.init_db(APP)
-        self.database = DatabaseConnection.connect()
+        self.database = DatabaseConnection()
+        self.database.init_db(APP)
         self.token = None
 
     def tearDown(self):

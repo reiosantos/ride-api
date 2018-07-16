@@ -8,7 +8,6 @@ from flask import json
 
 from api.config.database import DatabaseConnection
 from api.run import APP
-from api.utils.encoder import CustomJSONEncoder
 
 
 class TestClass(TestCase):
@@ -18,10 +17,10 @@ class TestClass(TestCase):
 
     def setUp(self):
         APP.config['TESTING'] = True
-        APP.json_encoder = CustomJSONEncoder
-        DatabaseConnection.init_db(APP)
+        # APP.json_encoder = CustomJSONEncoder
         self.client = APP.test_client
-        self.database = DatabaseConnection.connect()
+        self.database = DatabaseConnection()
+        self.database.init_db(APP)
 
         res = self.client().post('/api/v1/auth/signup/', data=json.dumps(dict(
             username="flavia",

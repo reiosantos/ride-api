@@ -5,9 +5,10 @@ import psycopg2 as pg
 from psycopg2.extras import RealDictCursor
 
 from api.config.config import DatabaseConfig
+from api.utils.singleton import Singleton
 
 
-class DatabaseConnection:
+class DatabaseConnection(metaclass=Singleton):
     """
     Database connection class
     Handles all database related issues/processes
@@ -36,35 +37,25 @@ class DatabaseConnection:
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.conn.close()
 
-    @classmethod
-    def init_db(cls, app):
+    def init_db(self, app):
         """
         provides a database connection object
         creates the object
         :return:
         """
         if app.config['TESTING']:
-            cls.schema = DatabaseConfig.SCHEMA_TESTING
-            cls.__conn.autocommit = True
+            self.schema = DatabaseConfig.SCHEMA_TESTING
+            self.__conn.autocommit = True
         else:
-            cls.schema = DatabaseConfig.SCHEMA_PRODUCTION
+            self.schema = DatabaseConfig.SCHEMA_PRODUCTION
 
         try:
-            if not cls.__conn:
-                cls.__conn = cls.DbConnection(cls.schema).conn
+            if not self.__conn:
+                self.__conn = self.DbConnection(self.schema).conn
         except pg.DatabaseError as ex:
             print("Error: " + str(ex))
 
-    @classmethod
-    def connect(cls):
-        """
-        :returns the class after creating a connection to DB
-        :return:
-        """
-        return cls
-
-    @classmethod
-    def insert(cls, table, data):
+    def insert(self, table, data):
         """
         handle all insertions into the database
         :param table:
@@ -76,7 +67,7 @@ class DatabaseConnection:
         columns = tuple(data.keys())
         values = tuple(data.values())
 
-        _top = f"""INSERT INTO {cls.schema}.{table} ("""
+        _top = f"""INSERT INTO {self.schema}.{table} ("""
 
         cols = ", ".join([f""" "{n}" """ for n in columns])
 
@@ -88,15 +79,14 @@ class DatabaseConnection:
 
         sql = _top + cols + middle + val + bottom
 
-        cur = cls.__conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute(sql)
-        cls.__conn.commit()
+        self.__conn.commit()
         if cur:
             return cur
         return None
 
-    @classmethod
-    def find(cls, name_of_table, criteria=None, join=None):
+    def find(self, name_of_table, criteria=None, join=None):
         """
         handles all queries to retrieve data
         :param name_of_table:
@@ -106,12 +96,12 @@ class DatabaseConnection:
         """
         sql = ""
         if not criteria and not join:
-            sql = f"""SELECT * FROM {cls.schema}.{name_of_table}"""
+            sql = f"""SELECT * FROM {self.schema}.{name_of_table}"""
         else:
             if criteria and not join:
                 columns = tuple(criteria.keys())
                 values = tuple(criteria.values())
-                top1 = f"""SELECT * FROM {cls.schema}.{name_of_table} WHERE ("""
+                top1 = f"""SELECT * FROM {self.schema}.{name_of_table} WHERE ("""
 
                 if len(columns) == 1:
                     crit = f""" "{columns[0]}"='{values[0]}' )"""
@@ -122,9 +112,9 @@ class DatabaseConnection:
                 sql = top1 + crit
             else:
                 pass
-        cur = cls.__conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute(sql)
-        cls.__conn.commit()
+        self.__conn.commit()
         if cur:
             val = cur.fetchall()
             if len(val) == 1:
@@ -133,8 +123,7 @@ class DatabaseConnection:
                 return val
         return None
 
-    @classmethod
-    def update(cls, table_name, selection, update):
+    def update(self, table_name, selection, update):
         """
         Handles update queries
         :param table_name:
@@ -143,7 +132,7 @@ class DatabaseConnection:
         :return:
         """
 
-        _top = f"""UPDATE {cls.schema}.{table_name} SET """
+        _top = f"""UPDATE {self.schema}.{table_name} SET """
 
         vals = ", ".join([f""" "{col1}"='{val1}' """ for col1, val1 in update.items()])
 
@@ -153,36 +142,34 @@ class DatabaseConnection:
 
         sql = _top + vals + middle + cols
 
-        cur = cls.__conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute(sql)
-        cls.__conn.commit()
+        self.__conn.commit()
         if cur:
             return cur
         return None
 
-    @classmethod
-    def delete(cls, table_name, selection):
+    def delete(self, table_name, selection):
         """
         handles delete queries
         :param table_name:
         :param selection:
         :return:
         """
-        _top = f"""DELETE FROM {cls.schema}.{table_name} WHERE """
+        _top = f"""DELETE FROM {self.schema}.{table_name} WHERE """
 
         cols = " AND ".join([f""" "{col}"='{val}' """ for col, val in selection.items()])
 
         sql = _top + cols
 
-        cur = cls.__conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute(sql)
-        cls.__conn.commit()
+        self.__conn.commit()
         if cur:
             return cur
         return None
 
-    @classmethod
-    def find_detailed_requests(cls, name_of_table, criteria=None):
+    def find_detailed_requests(self, name_of_table, criteria=None):
         """
         specific query handler for requests
         :param name_of_table:
@@ -190,7 +177,7 @@ class DatabaseConnection:
         :return:
         """
         if not criteria:
-            query = f"""SELECT * FROM {cls.schema}.{name_of_table}"""
+            query = f"""SELECT * FROM {self.schema}.{name_of_table}"""
         else:
             query = f"""
             SELECT a.request_date, a.request_id, a.status,
@@ -202,9 +189,9 @@ class DatabaseConnection:
             a.ride_id_fk='{criteria['ride_id']}')
             """
 
-        cur = cls.__conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute(query)
-        cls.__conn.commit()
+        self.__conn.commit()
         if cur:
             val = cur.fetchall()
             if len(val) == 1:
@@ -213,23 +200,13 @@ class DatabaseConnection:
                 return val
         return None
 
-    @classmethod
-    def create_test_schema(cls):
-        """
-        create test schema
-        :return:
-        """
-        # cur = cls.__conn.cursor()
-        # cur.execute(open("../../database_tests.sql", "r").read())
-
-    @classmethod
-    def drop_test_schema(cls):
+    def drop_test_schema(self):
         """
         delete test schema after using it
         :return:
         """
-        cur = cls.__conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute("""DELETE FROM tests.requests""")
         cur.execute("""DELETE FROM tests.rides""")
         cur.execute("""DELETE FROM tests.users""")
-        cls.__conn.commit()
+        self.__conn.commit()
