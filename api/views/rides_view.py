@@ -128,14 +128,14 @@ class RidesController(MethodView):
             del user.password
 
         ride_id = request.json["ride_id"]
-        ride = Rides.find_one_ride(ride_id, user.user_id)
+        ride = self.__rides.find_one_ride(ride_id, user.user_id)
         if not ride:
             return ReturnError.ride_not_found(ride_id)
 
-        update = Rides.update_ride(ride_id, user.user_id, request.json["cost"],
-                                   request.json["trip_from"],
-                                   request.json["destination"],
-                                   request.json["depart_time"])
+        update = self.__rides.update_ride(ride_id, user.user_id, request.json["cost"],
+                                          request.json["trip_from"],
+                                          request.json["destination"],
+                                          request.json["depart_time"])
         if update:
             return jsonify({"success_message": "Update has been successful.",
                             "data": True})
