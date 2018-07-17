@@ -24,6 +24,10 @@ class Utils:
     def generate_user_id():
         return "USR" + Utils.__create_unique_number()
 
+    @classmethod
+    def format_date(cls, param: datetime):
+        return param.strftime("%Y-%m-%d %H:%M:%S")
+
 
 class JSONSerializable(object):
 
