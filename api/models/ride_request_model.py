@@ -4,6 +4,7 @@ from api.models.objects.request_status import RequestStatus
 from api.models.objects.ride_status import RideStatus
 from api.models.rides_model import Rides
 from api.utils.singleton import Singleton
+from api.utils.utils import Utils
 
 
 class RideRequests(metaclass=Singleton):
@@ -47,7 +48,7 @@ class RideRequests(metaclass=Singleton):
             ride.request_id = response['request_id']
             ride.status = response['status']
             ride.taken = response['taken']
-            ride.request_date = response['request_date']
+            ride.request_date = Utils.format_date(response['request_date'])
             return ride
         return None
 

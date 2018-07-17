@@ -4,6 +4,7 @@ from typing import List
 from api.config.database import DatabaseConnection
 from api.models.objects.ride import RideModel
 from api.utils.singleton import Singleton
+from api.utils.utils import Utils
 
 
 class Rides(metaclass=Singleton):
@@ -79,20 +80,20 @@ class Rides(metaclass=Singleton):
                 data: List[RideModel] = []
                 for res in response:
                     ride = RideModel(res['driver_id'], res['destination'], res['trip_cost'],
-                                     res['trip_from'], res['departure_time'])
+                                     res['trip_from'], Utils.format_date(res['departure_time']))
                     ride.status = res['status']
                     ride.ride_id = res['ride_id']
-                    ride.post_date = res['post_date']
+                    ride.post_date = Utils.format_date(res['post_date'])
                     data.append(ride)
                 return data
             elif isinstance(response, dict) or (isinstance(response, list) and len(response) == 1):
                 if isinstance(response, list):
                     response = response[0]
                 ride = RideModel(response['driver_id'], response['destination'], response['trip_cost'],
-                                 response['trip_from'], response['departure_time'])
+                                 response['trip_from'], Utils.format_date(response['departure_time']))
                 ride.status = response['status']
                 ride.ride_id = response['ride_id']
-                ride.post_date = response['post_date']
+                ride.post_date = Utils.format_date(response['post_date'])
                 return ride
         return None
 
