@@ -180,8 +180,8 @@ class DatabaseConnection(metaclass=Singleton):
             query = f"""SELECT * FROM {self.schema}.{name_of_table}"""
         else:
             query = f"""
-            SELECT a.request_date, a.request_id, a.status,
-            b.status as ride_status, b.driver_id, b.ride_id, b.departure_time, 
+            SELECT a.request_date, a.request_id, a.status as request_status,
+            b.status, b.driver_id, b.ride_id, b.departure_time, 
             b.destination, b.post_date, b.trip_cost, b.trip_from, c.user_id, c.contact, 
             c.full_names FROM {self.schema}.requests a LEFT JOIN {self.schema}.rides b ON 
             a.ride_id_fk = b.ride_id LEFT JOIN {self.schema}.users c ON 
