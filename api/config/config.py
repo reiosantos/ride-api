@@ -40,6 +40,7 @@ class DatabaseConfig:
     They can be changed at any time.
     It extends the server congig class
     """
+    """
     HOST = "ec2-54-227-244-122.compute-1.amazonaws.com"  # "127.0.0.1"
     PORT = "5432"
     DATABASE = "dfvbqjpifjouqa"  # "ride-api"
@@ -48,3 +49,11 @@ class DatabaseConfig:
     SCHEMA_TESTING = "tests"
     USER = "djtuplqlttpocs"  # "postgres"
     PASSWORD = "480588ba2a7bf853d251f2fe57e94bbfa3168f720ed46ee798edf55075f6693d"  # "santos"
+    """
+    HOST = "127.0.0.1"
+    PORT = "5432"
+    DATABASE = "ride-api"
+    SCHEMA_PRODUCTION = "production"
+    SCHEMA_TESTING = "tests"
+    USER = "postgres"
+    PASSWORD = "santos"
