@@ -66,7 +66,7 @@ class ReturnError:
     @staticmethod
     def could_not_process_request():
         return jsonify({"error_message": "Request could not be processed.",
-                        "data": False}), 204
+                        "data": False}), 400
 
     @staticmethod
     def user_not_found():
@@ -82,7 +82,7 @@ class ReturnError:
             'data': False,
             'error_message': 'Not allowed to perform this action',
         }
-        return jsonify(response_object), 401
+        return jsonify(response_object), 403
 
     @staticmethod
     def user_already_exists():
@@ -90,7 +90,7 @@ class ReturnError:
             'data': False,
             'error_message': 'User already exists. Please Log in.',
         }
-        return jsonify(response_object), 202
+        return jsonify(response_object), 409
 
     @staticmethod
     def username_already_exists():
@@ -98,7 +98,7 @@ class ReturnError:
             'data': False,
             'error_message': 'Username already taken.',
         }
-        return jsonify(response_object), 202
+        return jsonify(response_object), 409
 
     @staticmethod
     def contact_already_exists():
@@ -106,7 +106,7 @@ class ReturnError:
             'data': False,
             'error_message': 'Phone number already taken.',
         }
-        return jsonify(response_object), 202
+        return jsonify(response_object), 409
 
     @staticmethod
     def invalid_credentials():
