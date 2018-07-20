@@ -73,6 +73,7 @@ class RideRequests(metaclass=Singleton):
             for request in response:
                 if request['ride_id'] not in all_requests:
                     all_requests[request['ride_id']] = []
+                request['post_date'] =  Utils.format_date(request['post_date'])
                 all_requests[request['ride_id']].append(request)
 
         elif ride_id and isinstance(response, dict):
