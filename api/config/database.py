@@ -182,10 +182,12 @@ class DatabaseConnection(metaclass=Singleton):
             query = f"""
             SELECT a.request_date, a.request_id, a.status as request_status,
             b.status, b.driver_id, b.ride_id, b.departure_time, 
-            b.destination, b.post_date, b.trip_cost, b.trip_from, c.user_id, c.contact as passenger_contact, 
-            c.full_names as passenger_name FROM {self.schema}.requests a LEFT JOIN {self.schema}.rides b ON 
+            b.destination, b.post_date, b.trip_cost, b.trip_from, c.user_id as passenger_id, 
+            c.contact as passenger_contact, c.full_names as passenger_name 
+            FROM {self.schema}.requests a LEFT JOIN {self.schema}.rides b ON 
             a.ride_id_fk = b.ride_id LEFT JOIN {self.schema}.users c ON 
-            a.passenger_id = c.user_id WHERE (b.driver_id='{criteria['driver_id']}' AND 
+            a.passenger_id = c.user_id WHERE ((b.driver_id='{criteria['driver_id']}' OR 
+            a.passenger_id='{criteria['passenger_id']}') AND 
             a.ride_id_fk='{criteria['ride_id']}')
             """
         cur = self.__conn.cursor()
