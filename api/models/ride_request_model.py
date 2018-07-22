@@ -66,6 +66,7 @@ class RideRequests(metaclass=Singleton):
 
         criteria = {
             "driver_id": driver_id,
+            "passenger_id": driver_id,
             "ride_id": ride_id
         }
         response = self.__database.find_detailed_requests(self.__table, criteria)

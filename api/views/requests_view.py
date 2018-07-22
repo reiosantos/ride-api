@@ -34,16 +34,20 @@ class RideRequestController(MethodView):
         :return:
         """
 
+        """
         is_driver = self.__is_driver()
         if not isinstance(is_driver, bool):
             return is_driver
+        """
 
         user = current_identity
         if hasattr(user, "password"):
             del user.password
 
+        """
         if not is_driver:
             return ReturnError.not_allowed_to_perform_this_action()
+        """
 
         if user:
             if ride_id:
