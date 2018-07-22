@@ -2,8 +2,6 @@ DROP SCHEMA IF EXISTS production CASCADE ;
 
 CREATE SCHEMA production;
 
-ALTER SCHEMA production OWNER TO postgres;
-
 CREATE TABLE production.users (
     id SERIAL NOT NULL PRIMARY KEY,
     user_id character varying(45) UNIQUE ,
@@ -37,3 +35,24 @@ CREATE TABLE production.requests (
     taken boolean,
     status character varying(45)
 );
+
+ALTER TABLE production.rides DROP CONSTRAINT rides_driver_id_fkey;
+
+ALTER TABLE production.rides
+  ADD CONSTRAINT rides_driver_id_fkey FOREIGN KEY (driver_id)
+      REFERENCES production.users (user_id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE production.requests DROP CONSTRAINT requests_passenger_id_fkey;
+
+ALTER TABLE production.requests
+  ADD CONSTRAINT requests_passenger_id_fkey FOREIGN KEY (passenger_id)
+      REFERENCES production.users (user_id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE production.requests DROP CONSTRAINT requests_ride_id_fk_fkey;
+
+ALTER TABLE production.requests
+  ADD CONSTRAINT requests_ride_id_fk_fkey FOREIGN KEY (ride_id_fk)
+      REFERENCES production.rides (ride_id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;

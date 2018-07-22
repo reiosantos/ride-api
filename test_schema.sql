@@ -35,3 +35,25 @@ CREATE TABLE tests.requests (
     taken boolean,
     status character varying(45)
 );
+
+ALTER TABLE tests.rides DROP CONSTRAINT rides_driver_id_fkey;
+
+ALTER TABLE tests.rides
+  ADD CONSTRAINT rides_driver_id_fkey FOREIGN KEY (driver_id)
+      REFERENCES tests.users (user_id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE tests.requests DROP CONSTRAINT requests_passenger_id_fkey;
+
+ALTER TABLE tests.requests
+  ADD CONSTRAINT requests_passenger_id_fkey FOREIGN KEY (passenger_id)
+      REFERENCES tests.users (user_id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE tests.requests DROP CONSTRAINT requests_ride_id_fk_fkey;
+
+ALTER TABLE tests.requests
+  ADD CONSTRAINT requests_ride_id_fk_fkey FOREIGN KEY (ride_id_fk)
+      REFERENCES tests.rides (ride_id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;
+
