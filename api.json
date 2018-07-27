@@ -1,0 +1,227 @@
+{
+	"swagger": "2.0",
+	"info": {
+		"description": "This documentation describes the ride-api and all its parameters. You can access the api from the URL [http://ride-api-3.herokuapp.com](http://ride-api-3.herokuapp.com)",
+		"version": "1.0",
+		"title": "Ride API",
+		"contact": {
+			"email": "reiosantos@yahoo.com"
+		},
+		"license": {
+			"name": "Apache 2.0",
+			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+		}
+	},
+	"host": "ride-api-3.herokuapp.com",
+	"basePath": "/api/v1",
+	"tags": [
+		{
+			"name": "rides",
+			"description": "Everything about a ride and its request"
+		},
+		{
+			"name": "auth",
+			"description": "All about user authentication and creation "
+		}
+	],
+	"schemes": [
+		"http",
+		"https"
+	],
+	"paths": {
+		"/rides": {
+			"post": {
+				"tags": [
+					"rides"
+				],
+				"summary": "Add a new ride offer",
+				"description": "",
+				"operationId": "addRide",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"in": "body",
+						"name": "body",
+						"description": "Ride object that needs to be added to the offers list",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/Ride"
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "successfully added a new ride."
+					},
+					"400": {
+						"description": "some of these fields are missing"
+					},
+					"401": {
+						"description": "Request does not contain an access token"
+					},
+					"403": {
+						"description": "Not allowed to perform this action"
+					},
+					"404": {
+						"description": "User does not exist."
+					},
+					"405": {
+						"description": "Method not allowed"
+					}
+				},
+				"security": [
+					{
+						"xToken": []
+					}
+				]
+			},
+			"get": {
+				"tags": [
+					"rides"
+				],
+				"summary": "Fetch all ride offers",
+				"description": "",
+				"operationId": "getRides",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "successful operation",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/RideDetail"
+							}
+						}
+					},
+					"401": {
+						"description": "Request does not contain an access token"
+					},
+					"404": {
+						"description": "User does not exist."
+					},
+					"405": {
+						"description": "Method not allowed"
+					}
+				},
+				"security": [
+					{
+						"xToken": []
+					}
+				]
+			}
+		}
+	},
+	"securityDefinitions": {
+		"xToken": {
+			"type": "apiKey",
+			"name": "Authorization",
+			"in": "header"
+		}
+	},
+	"definitions": {
+		"Ride": {
+			"type": "object",
+			"properties": {
+				"destination": {
+					"type": "string"
+				},
+				"trip_from": {
+					"type": "string"
+				},
+				"cost": {
+					"type": "number"
+				},
+				"depart_time": {
+					"type": "string",
+					"format": "date-time"
+				}
+			},
+			"xml": {
+				"name": "Ride"
+			}
+		},
+		"RideDetail": {
+			"type": "object",
+			"properties": {
+				"cost": {
+					"type": "number"
+				},
+				"departure_time": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"destination": {
+					"type": "string"
+				},
+				"driver_id": {
+					"type": "string"
+				},
+				"post_date": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"ride_id": {
+					"type": "string"
+				},
+				"status": {
+					"type": "string",
+					"description": "ride offer status",
+					"enum": [
+						"available",
+						"taken"
+					]
+				},
+				"trip_from": {
+					"type": "string"
+				}
+			},
+			"xml": {
+				"name": "RideDetail"
+			}
+		},
+		"User": {
+			"type": "object",
+			"properties": {
+				"full_name": {
+					"type": "string"
+				},
+				"username": {
+					"type": "string"
+				},
+				"user_type": {
+					"type": "string"
+				},
+				"password": {
+					"type": "string"
+				},
+				"contact": {
+					"type": "string"
+				}
+			},
+			"xml": {
+				"name": "User"
+			}
+		},
+		"Login": {
+			"type": "object",
+			"properties": {
+				"username": {
+					"type": "string"
+				},
+				"password": {
+					"type": "string"
+				}
+			},
+			"xml": {
+				"name": "Login"
+			}
+		}
+	}
+}
